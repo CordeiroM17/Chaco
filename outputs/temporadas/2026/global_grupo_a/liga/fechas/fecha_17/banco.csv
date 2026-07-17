@@ -1,0 +1,11 @@
+player,team,position,rating,is_sub,minutes,event_id
+C. Bernardi,Atlanta,M,7.8,True,19.0,15275677
+A. Guerrero,Godoy Cruz,M,7.7,True,44.0,15275670
+L. Cardozo,Deportivo Morón,D,7.5,True,65.0,15275671
+S. Vera,Almirante Brown,M,7.3,True,44.0,15275671
+G. González,Deportivo Morón,M,7.1,True,14.0,15275671
+A. Toledo,Club Atletico Colón,M,7.1,True,22.0,15275672
+T. B. Jérez,San Miguel,M,7.0,True,14.0,15275673
+A. Gallo,All Boys,F,7.0,True,29.0,15275668
+G. Castellani,Club Ferro Carril Oeste,M,7.0,True,20.0,15275676
+M. Moravec,Central Norte de Salta,M,7.0,True,34.0,15275675

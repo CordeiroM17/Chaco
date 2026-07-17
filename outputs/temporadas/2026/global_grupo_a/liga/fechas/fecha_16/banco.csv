@@ -1,0 +1,11 @@
+player,team,position,rating,is_sub,minutes,event_id
+J. Varela,Gimnasia Jujuy,D,7.7,True,8.0,16250939
+E. Gaggi,Chaco For Ever,M,7.5,True,26.0,15275651
+B. Mieres,CA Mitre,D,7.4,True,44.0,15275656
+M. Casa,Gimnasia Jujuy,M,7.4,True,23.0,16250939
+G. Melgarejo,Chaco For Ever,M,7.2,True,45.0,15275651
+T. Díaz,Los Andes,M,7.1,True,11.0,15275658
+N. Barrientos,Deportivo Madryn,M,7.1,True,15.0,15275652
+J. Menéndez,Club Ferro Carril Oeste,M,7.1,True,16.0,15275650
+D. Garcia,Defensores de Belgrano,F,7.1,True,10.0,15275653
+P. Argañaraz,Gimnasia Jujuy,M,7.0,True,14.0,16250939

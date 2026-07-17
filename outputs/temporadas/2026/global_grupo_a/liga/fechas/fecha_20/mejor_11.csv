@@ -1,0 +1,12 @@
+player,team,position,rating,is_sub,minutes,event_id
+J. Strumia,Godoy Cruz,G,8.0,False,90.0,16388586
+N. Brunet,Godoy Cruz,D,7.8,False,88.0,16388586
+N. Torres,Estudiantes de Buenos Aires,D,7.5,False,90.0,16388564
+D. Viera,Godoy Cruz,D,7.5,False,90.0,16388586
+F. Gerometta,Godoy Cruz,D,7.4,False,90.0,16388586
+F. Ardiles,Estudiantes de Buenos Aires,M,8.6,False,90.0,16388564
+A. Chamorro,Los Andes,M,7.9,False,86.0,16388559
+E. Gaggi,Chaco For Ever,M,7.9,False,78.0,16388553
+M. S. Romero,Chaco For Ever,F,9.0,False,90.0,16388553
+M. Asenjo,Los Andes,F,7.9,False,90.0,16388559
+A. Gonzalez,Ciudad de Bolivar,F,7.4,False,90.0,16388559

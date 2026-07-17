@@ -1,0 +1,11 @@
+player,team,position,rating,is_sub,minutes,event_id
+D. Adín,San Miguel,D,7.7,True,30.0,15275466
+F. Almeida,San Miguel,M,7.7,True,30.0,15275466
+B. Quintana,Ciudad de Bolivar,M,7.3,True,29.0,15275474
+E. F. Peralta,San Telmo,M,7.3,True,9.0,15275467
+F. Fagundez,Deportivo Morón,F,7.2,True,36.0,15275468
+J. Menéndez,Club Ferro Carril Oeste,M,7.2,True,12.0,15275470
+E. Hoyos,Club Ferro Carril Oeste,M,7.1,True,29.0,15275470
+M. González,Deportivo Morón,M,7.1,True,44.0,15275468
+M. L. Batallini,San Telmo,F,6.9,True,9.0,15275467
+L. Rey,Acassuso,M,6.9,True,32.0,15275468

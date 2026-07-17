@@ -1,0 +1,12 @@
+player,team,position,rating,is_sub,minutes,event_id
+M. Monllor,Acassuso,G,8.6,False,90.0,15275637
+E. Martinez,Ciudad de Bolivar,D,8.2,False,90.0,15275636
+R. Gamarra,San Telmo,D,8.1,False,90.0,15275636
+J. Rodriguez,Los Andes,D,8.0,False,90.0,15275631
+M. Guanini,Gimnasia y Tiro de Salta,D,7.9,False,90.0,15275641
+I. Lago,Club Atletico Colón,M,8.9,False,90.0,15275634
+M. Sosa,Godoy Cruz,M,8.3,False,64.0,15275632
+F. Fagundez,Deportivo Morón,M,7.9,False,90.0,15275633
+M. Pino,Godoy Cruz,F,10.0,False,78.0,15275632
+B. I. Nasta,San Miguel,F,7.6,False,90.0,15275635
+L. Marinucci,Chaco For Ever,F,7.6,False,90.0,15275638

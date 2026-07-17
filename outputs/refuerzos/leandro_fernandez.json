@@ -1,0 +1,357 @@
+{
+  "id": "355904",
+  "url": "https://www.transfermarkt.com.ar/leandro-fernandez/profil/spieler/355904",
+  "bio": {
+    "nombre": "Leandro Fernández",
+    "nombre_completo": "Leandro David Fernández",
+    "nacimiento": "23/01/1995 (31)",
+    "lugar_nacimiento": "Almafuerte",
+    "altura": "1,81 m",
+    "nacionalidad": "Argentina",
+    "posicion": "Delantero - Extremo izquierdo",
+    "pie": "Izquierdo",
+    "club_actual": "CA Chaco For Ever",
+    "rol": "Extremo izquierdo"
+  },
+  "movimientos": [
+    {
+      "temporada": "26/27",
+      "fecha": "01/07/2026",
+      "desde": "Villa Mitre",
+      "hacia": "Chaco For Ever",
+      "valor": "Libre"
+    },
+    {
+      "temporada": "25/26",
+      "fecha": "04/03/2026",
+      "desde": "Racing (Cba)",
+      "hacia": "Villa Mitre",
+      "valor": "Libre"
+    },
+    {
+      "temporada": "21/22",
+      "fecha": "01/07/2021",
+      "desde": "Sp. Las Parejas",
+      "hacia": "Racing (Cba)",
+      "valor": "Libre"
+    },
+    {
+      "temporada": "18/19",
+      "fecha": "01/07/2018",
+      "desde": "Belgrano II",
+      "hacia": "Sp. Las Parejas",
+      "valor": "?"
+    },
+    {
+      "temporada": "17/18",
+      "fecha": "30/06/2018",
+      "desde": "Guillermo Brown",
+      "hacia": "Belgrano II",
+      "valor": "Fin de cesión"
+    },
+    {
+      "temporada": "17/18",
+      "fecha": "11/09/2017",
+      "desde": "Belgrano II",
+      "hacia": "Guillermo Brown",
+      "valor": "Cesión"
+    },
+    {
+      "temporada": "16/17",
+      "fecha": "30/06/2017",
+      "desde": "Crucero",
+      "hacia": "Belgrano II",
+      "valor": "Fin de cesión"
+    },
+    {
+      "temporada": "16/17",
+      "fecha": "01/01/2017",
+      "desde": "Belgrano II",
+      "hacia": "Crucero",
+      "valor": "Cesión"
+    },
+    {
+      "temporada": "16/17",
+      "fecha": "01/07/2016",
+      "desde": "Belgrano S20",
+      "hacia": "Belgrano II",
+      "valor": "-"
+    }
+  ],
+  "trayectoria": [
+    "Belgrano S20",
+    "Belgrano II",
+    "Crucero",
+    "Belgrano II",
+    "Guillermo Brown",
+    "Belgrano II",
+    "Sp. Las Parejas",
+    "Racing (Cba)",
+    "Villa Mitre",
+    "Chaco For Ever"
+  ],
+  "trayectoria_detallada": [
+    {
+      "club": "Belgrano S20",
+      "desde": null,
+      "hasta": 2016,
+      "anios": "hasta 2016",
+      "logo_url": "https://tmssl.akamaized.net/images/wappen/homepageWappen70x70/19924.png?lm=1707233829",
+      "es_chaco": false,
+      "logo": "data/refuerzos/355904/logos/belgrano_s20.png"
+    },
+    {
+      "club": "Belgrano II",
+      "desde": 2016,
+      "hasta": 2017,
+      "anios": "2016–2017",
+      "logo_url": "https://tmssl.akamaized.net/images/wappen/homepageWappen70x70/61444.png?lm=1707233829",
+      "es_chaco": false,
+      "logo": "data/refuerzos/355904/logos/belgrano_ii.png"
+    },
+    {
+      "club": "Crucero",
+      "desde": 2017,
+      "hasta": 2017,
+      "anios": "2017",
+      "logo_url": "https://tmssl.akamaized.net/images/wappen/homepageWappen70x70/26157.png?lm=1537646035",
+      "es_chaco": false,
+      "logo": "data/refuerzos/355904/logos/crucero.png"
+    },
+    {
+      "club": "Belgrano II",
+      "desde": 2017,
+      "hasta": 2017,
+      "anios": "2017",
+      "logo_url": "https://tmssl.akamaized.net/images/wappen/homepageWappen70x70/61444.png?lm=1707233829",
+      "es_chaco": false,
+      "logo": "data/refuerzos/355904/logos/belgrano_ii.png"
+    },
+    {
+      "club": "Guillermo Brown",
+      "desde": 2017,
+      "hasta": 2018,
+      "anios": "2017–2018",
+      "logo_url": "https://tmssl.akamaized.net/images/wappen/homepageWappen70x70/14683.png?lm=1494611414",
+      "es_chaco": false,
+      "logo": "data/refuerzos/355904/logos/guillermo_brown.png"
+    },
+    {
+      "club": "Belgrano II",
+      "desde": 2018,
+      "hasta": 2018,
+      "anios": "2018",
+      "logo_url": "https://tmssl.akamaized.net/images/wappen/homepageWappen70x70/61444.png?lm=1707233829",
+      "es_chaco": false,
+      "logo": "data/refuerzos/355904/logos/belgrano_ii.png"
+    },
+    {
+      "club": "Sp. Las Parejas",
+      "desde": 2018,
+      "hasta": 2021,
+      "anios": "2018–2021",
+      "logo_url": "https://tmssl.akamaized.net/images/wappen/homepageWappen70x70/14597.png?lm=1675779659",
+      "es_chaco": false,
+      "logo": "data/refuerzos/355904/logos/sp_las_parejas.png"
+    },
+    {
+      "club": "Racing (Cba)",
+      "desde": 2021,
+      "hasta": 2026,
+      "anios": "2021–2026",
+      "logo_url": "https://tmssl.akamaized.net/images/wappen/homepageWappen70x70/10403_1775776697.png?lm=1775776697",
+      "es_chaco": false,
+      "logo": "data/refuerzos/355904/logos/racing_cba.png"
+    },
+    {
+      "club": "Villa Mitre",
+      "desde": 2026,
+      "hasta": 2026,
+      "anios": "2026",
+      "logo_url": "https://tmssl.akamaized.net/images/wappen/homepageWappen70x70/12741.png?lm=1675779175",
+      "es_chaco": false,
+      "logo": "data/refuerzos/355904/logos/villa_mitre.png"
+    },
+    {
+      "club": "Chaco For Ever",
+      "desde": 2026,
+      "hasta": null,
+      "anios": "2026–hoy",
+      "logo_url": "https://tmssl.akamaized.net/images/wappen/homepageWappen70x70/12681.png?lm=1647473492",
+      "es_chaco": true,
+      "logo": "data/refuerzos/355904/logos/chaco_for_ever.png"
+    }
+  ],
+  "clubes": [
+    "Belgrano S20",
+    "Belgrano II",
+    "Crucero",
+    "Guillermo Brown",
+    "Sp. Las Parejas",
+    "Racing (Cba)",
+    "Villa Mitre",
+    "Chaco For Ever"
+  ],
+  "carrera": [
+    {
+      "competicion": "Primera Nacional",
+      "partidos": 102,
+      "goles": 6,
+      "asistencias": 8,
+      "minutos": 8400
+    },
+    {
+      "competicion": "Torneo Federal A",
+      "partidos": 76,
+      "goles": 7,
+      "asistencias": 6,
+      "minutos": 5701
+    },
+    {
+      "competicion": "Torneo Fed. A Playoff",
+      "partidos": 7,
+      "goles": 0,
+      "asistencias": 0,
+      "minutos": 607
+    },
+    {
+      "competicion": "Copa Argentina",
+      "partidos": 4,
+      "goles": 0,
+      "asistencias": 0,
+      "minutos": 345
+    },
+    {
+      "competicion": "Prim. Nacional - Reducido",
+      "partidos": 1,
+      "goles": 0,
+      "asistencias": 0,
+      "minutos": 90
+    }
+  ],
+  "carrera_total": {
+    "partidos": 190,
+    "goles": 13,
+    "asistencias": 14,
+    "minutos": 15143
+  },
+  "por_temporada": [
+    {
+      "anio": 2026,
+      "competicion": "Torneo Federal A",
+      "partidos": 10,
+      "goles": null,
+      "asistencias": null,
+      "minutos": 900
+    },
+    {
+      "anio": 2025,
+      "competicion": "Primera Nacional",
+      "partidos": 34,
+      "goles": 2,
+      "asistencias": 1,
+      "minutos": 2600
+    },
+    {
+      "anio": 2025,
+      "competicion": "Copa Argentina",
+      "partidos": 1,
+      "goles": null,
+      "asistencias": null,
+      "minutos": 90
+    },
+    {
+      "anio": 2024,
+      "competicion": "Prim. Nacional - Reducido",
+      "partidos": 1,
+      "goles": null,
+      "asistencias": null,
+      "minutos": 90
+    },
+    {
+      "anio": 2024,
+      "competicion": "Primera Nacional",
+      "partidos": 35,
+      "goles": 2,
+      "asistencias": 4,
+      "minutos": 2890
+    },
+    {
+      "anio": 2023,
+      "competicion": "Primera Nacional",
+      "partidos": 33,
+      "goles": 2,
+      "asistencias": 3,
+      "minutos": 2910
+    },
+    {
+      "anio": 2023,
+      "competicion": "Copa Argentina",
+      "partidos": 1,
+      "goles": null,
+      "asistencias": null,
+      "minutos": 90
+    },
+    {
+      "anio": 2022,
+      "competicion": "Torneo Fed. A Playoff",
+      "partidos": 4,
+      "goles": null,
+      "asistencias": null,
+      "minutos": 360
+    },
+    {
+      "anio": 2022,
+      "competicion": "Torneo Federal A",
+      "partidos": 27,
+      "goles": 2,
+      "asistencias": 6,
+      "minutos": 2015
+    },
+    {
+      "anio": 2022,
+      "competicion": "Copa Argentina",
+      "partidos": 2,
+      "goles": null,
+      "asistencias": null,
+      "minutos": 165
+    },
+    {
+      "anio": 2021,
+      "competicion": "Torneo Fed. A Playoff",
+      "partidos": 3,
+      "goles": null,
+      "asistencias": null,
+      "minutos": 247
+    },
+    {
+      "anio": 2021,
+      "competicion": "Torneo Federal A",
+      "partidos": 27,
+      "goles": 5,
+      "asistencias": null,
+      "minutos": 2180
+    },
+    {
+      "anio": 2019,
+      "competicion": "Torneo Federal A",
+      "partidos": 12,
+      "goles": null,
+      "asistencias": null,
+      "minutos": 606
+    }
+  ],
+  "ultimo_club": {
+    "club": "Villa Mitre",
+    "anios": [
+      2026
+    ],
+    "partidos": 10,
+    "goles": 0,
+    "asistencias": 0,
+    "minutos": 900,
+    "min_por_partido": 90.0,
+    "veredicto": "Titular habitual"
+  },
+  "es_retorno": false
+}

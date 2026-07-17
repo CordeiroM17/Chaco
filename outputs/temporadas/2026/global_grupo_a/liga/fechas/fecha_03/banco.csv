@@ -1,0 +1,11 @@
+player,team,position,rating,is_sub,minutes,event_id
+E. Bulacio,Deportivo Morón,F,7.4,True,25.0,15465870
+A. Valverde,Godoy Cruz,D,7.3,True,44.0,15465880
+R. Gamarra,San Telmo,M,7.3,True,32.0,15465881
+F. Paradela,Gimnasia Jujuy,M,7.2,True,29.0,15465868
+L. Pascual,Godoy Cruz,M,7.2,True,44.0,15465880
+D. Escalante,Acassuso,F,7.2,True,29.0,15465881
+D. Garcia,Defensores de Belgrano,F,7.1,True,9.0,15465871
+M. Abreliano,Almirante Brown,D,7.1,True,45.0,15463826
+J. J. P. Lapegüe,San Telmo,F,7.1,True,32.0,15465881
+C. Ibarra,Club Atletico Colón,M,7.0,True,20.0,15465876

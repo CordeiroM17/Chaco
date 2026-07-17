@@ -1,0 +1,11 @@
+player,team,position,rating,is_sub,minutes,event_id
+L. Silba,Deportivo Madryn,M,7.4,True,52.0,15275527
+J. C. Cerrudo,Chaco For Ever,M,7.2,True,32.0,15275524
+R. Mosqueira,Agropecuario Argentino,M,7.2,True,23.0,15275529
+F. Ferrari,CA Mitre,M,7.1,True,44.0,15275526
+B. Aranda,Agropecuario Argentino,M,7.1,True,35.0,15275529
+J. Heritier,Agropecuario Argentino,F,7.1,True,35.0,15275529
+L. Viano,Racing de Córdoba,D,7.0,True,44.0,15275520
+R. Costa,Central Norte de Salta,F,7.0,True,28.0,15275526
+S. Corda,Club Ferro Carril Oeste,D,7.0,True,44.0,15275525
+M. Godoy,Club Atletico Colón,M,6.9,True,44.0,15275520

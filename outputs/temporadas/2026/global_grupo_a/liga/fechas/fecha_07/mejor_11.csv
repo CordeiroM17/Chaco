@@ -1,0 +1,12 @@
+player,team,position,rating,is_sub,minutes,event_id
+J. M. Lungarzo,San Miguel,G,8.8,False,90.0,15275499
+F. Ardiles,Estudiantes de Buenos Aires,D,7.9,False,90.0,15275489
+A. Tabares,All Boys,D,7.7,False,90.0,15275484
+I. Antunes,CA Mitre,D,7.7,False,90.0,15275492
+E. Navarro,Ciudad de Bolivar,D,7.7,False,90.0,15275494
+A. Campana,Ferrocarril Midland,M,9.2,False,74.0,15275501
+C. Salto,CA Mitre,M,8.6,False,90.0,15275492
+A. Benítez,Defensores de Belgrano,M,8.4,False,90.0,15275500
+J. S. Sotelo,Güemes,F,8.3,False,73.0,15275492
+J. Marcioni,Club Atletico Colón,F,8.1,False,90.0,15275495
+I. Lago,Club Atletico Colón,F,8.1,False,67.0,15275495

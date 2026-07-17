@@ -1,0 +1,11 @@
+player,team,position,rating,is_sub,minutes,event_id
+E. Bulacio,Deportivo Morón,F,7.9,True,45.0,15275546
+S. Camacho,Estudiantes de Buenos Aires,M,7.5,True,13.0,15275542
+P. Argañaraz,Gimnasia Jujuy,M,7.4,True,16.0,15275547
+G. Sánchez,Ciudad de Bolivar,M,7.2,True,45.0,15275539
+F. Mucignat,Ciudad de Bolivar,M,7.2,True,7.0,15275539
+O. Bianchi,Gimnasia Jujuy,F,7.2,True,16.0,15275547
+F. Taborda,Racing de Córdoba,M,7.1,True,44.0,15275538
+I. Palacio,All Boys,M,7.1,True,21.0,15275543
+M. Benítez,Deportivo Morón,M,7.0,True,24.0,15275546
+E. Hoyos,Club Ferro Carril Oeste,M,7.0,True,31.0,15275541

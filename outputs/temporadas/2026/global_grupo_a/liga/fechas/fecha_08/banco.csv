@@ -1,0 +1,11 @@
+player,team,position,rating,is_sub,minutes,event_id
+G. Olguin,Club Ferro Carril Oeste,D,7.8,True,73.0,15275506
+F. Tcherkaski,Defensores de Belgrano,F,7.5,True,16.0,15275503
+S. Gauna,Almirante Brown,M,7.3,True,35.0,15275503
+C. Viganoni,Los Andes,F,7.2,True,21.0,15275507
+F. Mucignat,Ciudad de Bolivar,M,7.1,True,28.0,15275502
+M. Ramírez,Godoy Cruz,F,7.1,True,4.0,15275508
+J. Menéndez,Club Ferro Carril Oeste,M,7.0,True,22.0,15275506
+F. Villarreal,Los Andes,M,6.9,True,21.0,15275507
+T. Salas,Estudiantes de Buenos Aires,F,6.9,True,24.0,15275505
+F. Monticelli,Racing de Córdoba,M,6.9,True,16.0,15275502

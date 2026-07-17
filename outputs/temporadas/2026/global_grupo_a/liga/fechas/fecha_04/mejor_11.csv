@@ -1,0 +1,12 @@
+player,team,position,rating,is_sub,minutes,event_id
+E. Vázquez,Central Norte de Salta,G,7.9,False,90.0,15943810
+L. Britez,San Telmo,D,8.1,False,90.0,15943811
+N. G. A. Rojas,Almirante Brown,D,7.9,False,90.0,15943808
+Y. D. Vito,All Boys,D,7.6,False,90.0,15943804
+L. Arce,Godoy Cruz,D,7.6,False,90.0,15943810
+F. Molina,Gimnasia Jujuy,M,8.5,False,63.0,15943801
+Meli,Deportivo Madryn,M,8.1,False,90.0,15943803
+Á. González,Club Ferro Carril Oeste,M,7.7,False,85.0,15943795
+T. Calone,All Boys,F,8.1,False,88.0,15943804
+E. Dening,Club Ferro Carril Oeste,F,7.7,False,71.0,15943795
+L. Parisi,Club Ferro Carril Oeste,F,7.7,False,90.0,15943795

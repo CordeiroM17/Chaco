@@ -1,0 +1,11 @@
+player,team,position,rating,is_sub,minutes,event_id
+T. A. Ramírez,Deportivo Morón,M,8.2,True,44.0,15275488
+E. Martinez,Almagro,M,7.5,True,84.0,15275488
+M. Benítez,Deportivo Morón,F,7.4,True,44.0,15275488
+I. Enriquez,Chaco For Ever,F,7.4,True,20.0,15275487
+M. Belloso,Almirante Brown,M,7.3,True,23.0,15275493
+F. Recalde,Deportivo Madryn,D,7.3,True,44.0,15275486
+M. Romero,CA Mitre,M,7.3,True,45.0,15275492
+F. Brandan,Temperley,M,7.3,True,14.0,15275491
+A. Sosa,Deportivo Madryn,M,7.3,True,44.0,15275486
+L. Flores,Atlético de Rafaela,D,7.2,True,44.0,15275500

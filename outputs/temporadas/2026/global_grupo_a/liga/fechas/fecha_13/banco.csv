@@ -1,0 +1,11 @@
+player,team,position,rating,is_sub,minutes,event_id
+M. García,San Martín de Tucumán,M,7.9,True,26.0,16112451
+M. Ledesma,San Telmo,M,7.3,True,44.0,15275598
+T. Salas,Estudiantes de Buenos Aires,M,7.3,True,6.0,15275597
+N. Barrientos,Deportivo Madryn,M,7.3,True,24.0,15275602
+A. Lioi,Chaco For Ever,M,7.2,True,53.0,15275600
+G. Castellani,Club Ferro Carril Oeste,M,7.1,True,26.0,15275601
+R. Blanco,All Boys,F,7.0,True,45.0,15275596
+M. Alvez,Central Norte de Salta,M,7.0,True,7.0,15275602
+T. Zárate,Almirante Brown,M,6.9,True,33.0,15275599
+F. Toloza,Deportivo Morón,F,6.9,True,30.0,15275595

@@ -1,0 +1,11 @@
+player,team,position,rating,is_sub,minutes,event_id
+M. Cachi,Gimnasia Jujuy,M,7.6,True,23.0,15275621
+F. Ortiz,Racing de Córdoba,M,7.4,True,36.0,15275612
+S. Apa,All Boys,F,7.4,True,16.0,16168645
+N. Barrientos,Deportivo Madryn,F,7.2,True,31.0,15275613
+M. Sosa,Godoy Cruz,M,7.2,True,44.0,15275620
+F. Mucignat,Ciudad de Bolivar,M,7.2,True,31.0,15275615
+M. Romero,CA Mitre,D,7.2,True,55.0,15275617
+M. Cuero,Deportivo Madryn,M,7.1,True,31.0,15275613
+D. Magallanes,Defensores de Belgrano,D,7.1,True,22.0,15275614
+B. Mieres,CA Mitre,D,7.0,True,30.0,15275617

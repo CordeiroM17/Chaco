@@ -1,0 +1,18 @@
+pandas
+numpy
+matplotlib
+mplsoccer
+networkx
+requests
+lifelines
+
+# Scraping de Sofascore (API directa por event_id)
+selenium
+webdriver-manager
+undetected-chromedriver
+cloudscraper
+beautifulsoup4
+lanusstats
+
+# Informes narrativos
+anthropic

@@ -1,0 +1,11 @@
+player,team,position,rating,is_sub,minutes,event_id
+S. Vera,Almirante Brown,M,7.2,True,31.0,15275579
+S. Gonzalez,Racing de Córdoba,F,7.2,True,9.0,15275575
+G. Castellani,Club Ferro Carril Oeste,M,7.2,True,16.0,15275578
+M. Ramírez,Godoy Cruz,M,7.1,True,31.0,15275584
+F. Monticelli,Racing de Córdoba,M,7.1,True,9.0,15275575
+J. P. Zarate,CA Mitre,M,7.1,True,14.0,15275580
+B. Orosco,Godoy Cruz,F,7.0,True,31.0,15275584
+A. Lioi,Chaco For Ever,F,7.0,True,25.0,15275579
+A. Ramírez,CA Mitre,M,7.0,True,28.0,15275580
+M. Rodríguez,All Boys,M,6.9,True,25.0,15275582

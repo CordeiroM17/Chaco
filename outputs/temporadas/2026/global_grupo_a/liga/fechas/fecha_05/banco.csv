@@ -1,0 +1,11 @@
+player,team,position,rating,is_sub,minutes,event_id
+F. Molina,Gimnasia Jujuy,M,7.7,True,44.0,15275457
+J. Mateo,Central Norte de Salta,M,7.4,True,26.0,15275452
+F. García,Club Ferro Carril Oeste,F,7.4,True,15.0,15275453
+C. Viganoni,Los Andes,F,7.2,True,28.0,15275452
+M. Maldonado,CA Mitre,M,7.2,True,24.0,15275449
+G. M. Fernandez,CA Mitre,F,7.2,True,24.0,15275449
+L. Felissia,Central Norte de Salta,D,7.2,True,51.0,15275452
+S. Camacho,Estudiantes de Buenos Aires,M,7.1,True,44.0,15275450
+E. Burgos,Godoy Cruz,D,7.1,True,69.0,15275453
+M. Campos,Club Ferro Carril Oeste,M,7.1,True,27.0,15275453

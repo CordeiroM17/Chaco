@@ -1,0 +1,11 @@
+player,team,position,rating,is_sub,minutes,event_id
+B. Duarte,Ciudad de Bolivar,M,7.5,True,31.0,15463926
+L. Marinucci,Chaco For Ever,M,7.4,True,23.0,15464032
+F. Paradela,Gimnasia Jujuy,M,7.3,True,18.0,15463211
+G. Melgarejo,Chaco For Ever,M,7.3,True,52.0,15464032
+P. Argañaraz,Gimnasia Jujuy,M,7.2,True,27.0,15463211
+M. Kabalin,Club Ferro Carril Oeste,M,7.2,True,44.0,15459007
+F. Cristaldo,Club Atlético Chacarita Juniors,M,7.2,True,11.0,15463211
+Á. Díaz,Ciudad de Bolivar,M,7.1,True,31.0,15463926
+F. García,Club Ferro Carril Oeste,F,7.1,True,8.0,15459007
+B. López,All Boys,M,7.0,True,23.0,15420761

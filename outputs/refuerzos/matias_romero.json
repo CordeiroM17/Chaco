@@ -1,0 +1,312 @@
+{
+  "id": "853464",
+  "url": "https://www.transfermarkt.com.ar/matias-romero/profil/spieler/853464",
+  "bio": {
+    "nombre": "Matías Romero",
+    "valor_mercado": "200 mil €",
+    "nombre_completo": "Matías Sebastián Romero",
+    "nacimiento": "06/06/1994 (32)",
+    "lugar_nacimiento": "Formosa",
+    "altura": "1,85 m",
+    "nacionalidad": "Argentina",
+    "posicion": "Delantero - Delantero centro",
+    "pie": "Derecho",
+    "club_actual": "Sin equipo",
+    "rol": "Delantero centro"
+  },
+  "movimientos": [
+    {
+      "temporada": "26/27",
+      "fecha": "01/07/2026",
+      "desde": "Nueva Chicago",
+      "hacia": "Sin equipo",
+      "valor": "-"
+    },
+    {
+      "temporada": "25/26",
+      "fecha": "02/01/2026",
+      "desde": "Chaco For Ever",
+      "hacia": "Nueva Chicago",
+      "valor": "Libre"
+    },
+    {
+      "temporada": "24/25",
+      "fecha": "09/01/2025",
+      "desde": "Dep. Morón",
+      "hacia": "Chaco For Ever",
+      "valor": "Libre"
+    },
+    {
+      "temporada": "23/24",
+      "fecha": "01/01/2024",
+      "desde": "Chaco For Ever",
+      "hacia": "Dep. Morón",
+      "valor": "Libre"
+    },
+    {
+      "temporada": "19/20",
+      "fecha": "01/07/2019",
+      "desde": "Juv. Unida (SL)",
+      "hacia": "Chaco For Ever",
+      "valor": "?"
+    },
+    {
+      "temporada": "18/19",
+      "fecha": "01/07/2018",
+      "desde": "Patria",
+      "hacia": "Juv. Unida (SL)",
+      "valor": "?"
+    },
+    {
+      "temporada": "14/15",
+      "fecha": "01/07/2014",
+      "desde": "Unión Güemes",
+      "hacia": "Patria",
+      "valor": "?"
+    }
+  ],
+  "trayectoria": [
+    "Unión Güemes",
+    "Patria",
+    "Juv. Unida (SL)",
+    "Chaco For Ever",
+    "Dep. Morón",
+    "Chaco For Ever",
+    "Nueva Chicago"
+  ],
+  "trayectoria_detallada": [
+    {
+      "club": "Unión Güemes",
+      "desde": null,
+      "hasta": 2014,
+      "anios": "hasta 2014",
+      "logo_url": "https://tmssl.akamaized.net/images/wappen/homepageWappen70x70/135907.png?lm=1764601305",
+      "es_chaco": false,
+      "logo": "data/refuerzos/853464/logos/uni_n_g_emes.png"
+    },
+    {
+      "club": "Patria",
+      "desde": 2014,
+      "hasta": 2018,
+      "anios": "2014–2018",
+      "logo_url": "https://tmssl.akamaized.net/images/wappen/homepageWappen70x70/19316.png?lm=1512255083",
+      "es_chaco": false,
+      "logo": "data/refuerzos/853464/logos/patria.png"
+    },
+    {
+      "club": "Juv. Unida (SL)",
+      "desde": 2018,
+      "hasta": 2019,
+      "anios": "2018–2019",
+      "logo_url": "https://tmssl.akamaized.net/images/wappen/homepageWappen70x70/18911.png?lm=1675779260",
+      "es_chaco": false,
+      "logo": "data/refuerzos/853464/logos/juv_unida_sl.png"
+    },
+    {
+      "club": "Chaco For Ever",
+      "desde": 2019,
+      "hasta": 2024,
+      "anios": "2019–2024",
+      "logo_url": "https://tmssl.akamaized.net/images/wappen/homepageWappen70x70/12681.png?lm=1647473492",
+      "es_chaco": true,
+      "logo": "data/refuerzos/853464/logos/chaco_for_ever.png"
+    },
+    {
+      "club": "Dep. Morón",
+      "desde": 2024,
+      "hasta": 2025,
+      "anios": "2024–2025",
+      "logo_url": "https://tmssl.akamaized.net/images/wappen/homepageWappen70x70/12458.png?lm=1424606116",
+      "es_chaco": false,
+      "logo": "data/refuerzos/853464/logos/dep_mor_n.png"
+    },
+    {
+      "club": "Chaco For Ever",
+      "desde": 2025,
+      "hasta": 2026,
+      "anios": "2025–2026",
+      "logo_url": "https://tmssl.akamaized.net/images/wappen/homepageWappen70x70/12681.png?lm=1647473492",
+      "es_chaco": true,
+      "logo": "data/refuerzos/853464/logos/chaco_for_ever.png"
+    },
+    {
+      "club": "Nueva Chicago",
+      "desde": 2026,
+      "hasta": 2026,
+      "anios": "2026",
+      "logo_url": "https://tmssl.akamaized.net/images/wappen/homepageWappen70x70/10534.png?lm=1775777000",
+      "es_chaco": false,
+      "logo": "data/refuerzos/853464/logos/nueva_chicago.png"
+    }
+  ],
+  "clubes": [
+    "Unión Güemes",
+    "Patria",
+    "Juv. Unida (SL)",
+    "Chaco For Ever",
+    "Dep. Morón",
+    "Nueva Chicago"
+  ],
+  "carrera": [
+    {
+      "competicion": "Primera Nacional",
+      "partidos": 129,
+      "goles": 21,
+      "asistencias": 6,
+      "minutos": 7345
+    },
+    {
+      "competicion": "Torneo Federal A",
+      "partidos": 34,
+      "goles": 6,
+      "asistencias": 2,
+      "minutos": 2037
+    },
+    {
+      "competicion": "Copa Argentina",
+      "partidos": 7,
+      "goles": 0,
+      "asistencias": 0,
+      "minutos": 239
+    },
+    {
+      "competicion": "Torneo Fed. A Playoff",
+      "partidos": 4,
+      "goles": 1,
+      "asistencias": 0,
+      "minutos": 312
+    },
+    {
+      "competicion": "Prim. Nacional - Reducido",
+      "partidos": 1,
+      "goles": 0,
+      "asistencias": 0,
+      "minutos": 11
+    }
+  ],
+  "carrera_total": {
+    "partidos": 175,
+    "goles": 28,
+    "asistencias": 8,
+    "minutos": 9944
+  },
+  "por_temporada": [
+    {
+      "anio": 2026,
+      "competicion": "Primera Nacional",
+      "partidos": 15,
+      "goles": 1,
+      "asistencias": null,
+      "minutos": 639
+    },
+    {
+      "anio": 2025,
+      "competicion": "Primera Nacional",
+      "partidos": 32,
+      "goles": 11,
+      "asistencias": 3,
+      "minutos": 2512
+    },
+    {
+      "anio": 2024,
+      "competicion": "Primera Nacional",
+      "partidos": 33,
+      "goles": 1,
+      "asistencias": 1,
+      "minutos": 1570
+    },
+    {
+      "anio": 2023,
+      "competicion": "Primera Nacional",
+      "partidos": 28,
+      "goles": 7,
+      "asistencias": null,
+      "minutos": 1593
+    },
+    {
+      "anio": 2023,
+      "competicion": "Copa Argentina",
+      "partidos": 3,
+      "goles": null,
+      "asistencias": null,
+      "minutos": 136
+    },
+    {
+      "anio": 2022,
+      "competicion": "Prim. Nacional - Reducido",
+      "partidos": 1,
+      "goles": null,
+      "asistencias": null,
+      "minutos": 11
+    },
+    {
+      "anio": 2022,
+      "competicion": "Primera Nacional",
+      "partidos": 21,
+      "goles": 1,
+      "asistencias": 2,
+      "minutos": 1031
+    },
+    {
+      "anio": 2022,
+      "competicion": "Copa Argentina",
+      "partidos": 2,
+      "goles": null,
+      "asistencias": null,
+      "minutos": 58
+    },
+    {
+      "anio": 2021,
+      "competicion": "Torneo Fed. A Playoff",
+      "partidos": 4,
+      "goles": 1,
+      "asistencias": null,
+      "minutos": 312
+    },
+    {
+      "anio": 2021,
+      "competicion": "Torneo Federal A",
+      "partidos": 23,
+      "goles": 4,
+      "asistencias": 1,
+      "minutos": 1523
+    },
+    {
+      "anio": 2020,
+      "competicion": "Torneo Federal A",
+      "partidos": 4,
+      "goles": 1,
+      "asistencias": null,
+      "minutos": 218
+    },
+    {
+      "anio": 2020,
+      "competicion": "Copa Argentina",
+      "partidos": 2,
+      "goles": null,
+      "asistencias": null,
+      "minutos": 45
+    },
+    {
+      "anio": 2019,
+      "competicion": "Torneo Federal A",
+      "partidos": 7,
+      "goles": 1,
+      "asistencias": 1,
+      "minutos": 296
+    }
+  ],
+  "ultimo_club": {
+    "club": "Nueva Chicago",
+    "anios": [
+      2026
+    ],
+    "partidos": 15,
+    "goles": 1,
+    "asistencias": 0,
+    "minutos": 639,
+    "min_por_partido": 42.6,
+    "veredicto": "Poco rodaje: mayormente suplente"
+  },
+  "es_retorno": true
+}

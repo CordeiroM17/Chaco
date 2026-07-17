@@ -1,0 +1,12 @@
+player,team,position,rating,is_sub,minutes,event_id
+A. Medina,Defensores de Belgrano,G,9.1,False,90.0,15465871
+K. Ceceri,San Miguel,D,8.0,False,90.0,15465878
+F. Cardozo,San Miguel,D,7.9,False,90.0,15465878
+H. Grana,All Boys,D,7.7,False,90.0,15463414
+M. Mendoza,Godoy Cruz,D,7.7,False,90.0,15465880
+R. Reynoso,Acassuso,M,8.3,False,76.0,15465881
+J. Motroni,San Telmo,M,7.9,False,90.0,15465881
+S. Kubiszyn,Deportivo Morón,M,7.6,False,90.0,15465870
+M. L. Batallini,San Telmo,F,7.5,False,35.0,15465881
+G. Berterame,Deportivo Morón,F,7.5,False,81.0,15465870
+E. González,Defensores de Belgrano,F,7.4,False,90.0,15465871

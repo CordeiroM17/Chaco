@@ -1,0 +1,12 @@
+player,team,position,rating,is_sub,minutes,event_id
+J. Enrico,San Telmo,G,9.0,False,90.0,15275544
+D. Minervino,Gimnasia Jujuy,D,8.7,False,90.0,15275547
+M. Lazarte,Gimnasia Jujuy,D,8.2,False,90.0,15275547
+I. Zafarana,All Boys,D,7.9,False,90.0,15275543
+M. Gomez,Racing de Córdoba,D,7.7,False,90.0,15275538
+F. Molina,Gimnasia Jujuy,M,8.8,False,61.0,15275547
+R. Centurión,Racing de Córdoba,M,8.1,False,66.0,15275538
+A. Chamorro,Los Andes,M,8.0,False,84.0,15275544
+F. Fagundez,Deportivo Morón,F,8.4,False,66.0,15275546
+N. Solís,Deportivo Madryn,F,8.1,False,90.0,15275539
+M. Benegas,Almagro,F,8.0,False,68.0,15275547

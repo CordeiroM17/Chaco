@@ -1,0 +1,12 @@
+player,team,position,rating,is_sub,minutes,event_id
+Y. Bonnin,Deportivo Madryn,G,8.7,False,90.0,15275451
+A. Tabares,All Boys,D,8.1,False,90.0,15275451
+I. Zafarana,All Boys,D,7.5,False,90.0,15275451
+L. Pollacchi,San Telmo,D,7.5,False,90.0,15275456
+N. Vaquer,Defensores de Belgrano,D,7.4,False,90.0,15275450
+R. Blanco,All Boys,M,8.2,False,89.0,15275451
+I. Lago,Club Atletico Colón,M,8.0,False,90.0,15275455
+R. Centurión,Racing de Córdoba,M,7.9,False,61.0,15275448
+F. Toloza,Deportivo Morón,F,8.6,False,67.0,15275454
+E. González,Defensores de Belgrano,F,8.5,False,46.0,15275450
+P. Chavarría,Racing de Córdoba,F,8.3,False,90.0,15275448

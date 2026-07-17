@@ -1,0 +1,11 @@
+player,team,position,rating,is_sub,minutes,event_id
+J. C. Vega,Ferrocarril Midland,M,7.4,True,26.0,15275384
+B. Orosco,Godoy Cruz,M,7.4,True,37.0,15439714
+C. Viganoni,Los Andes,F,7.2,True,21.0,15463947
+E. Osuna,Club Ferro Carril Oeste,M,7.0,True,27.0,15463952
+S. Martínez,Godoy Cruz,M,7.0,True,37.0,15439714
+L. Ciccolini,Defensores de Belgrano,M,6.9,True,23.0,15420789
+T. Díaz,Los Andes,M,6.9,True,13.0,15463947
+C. Salto,CA Mitre,M,6.9,True,15.0,15464034
+P. Bonacci,Deportivo Madryn,M,6.9,True,33.0,15463948
+J. Velázquez,Almirante Brown,M,6.8,True,26.0,15463947

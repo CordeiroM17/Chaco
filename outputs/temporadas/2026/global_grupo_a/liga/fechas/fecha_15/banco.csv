@@ -1,0 +1,11 @@
+player,team,position,rating,is_sub,minutes,event_id
+D. Juárez,San Miguel,M,7.8,True,24.0,15275635
+D. Garcia,Defensores de Belgrano,M,7.4,True,10.0,15275637
+J. Motroni,San Telmo,D,7.3,True,85.0,15275636
+A. Lopez,CA Mitre,M,7.2,True,34.0,15275634
+G. González,Deportivo Morón,M,7.1,True,23.0,15275633
+J. Andrada,Godoy Cruz,M,7.1,True,44.0,15275632
+M. Alvez,Central Norte de Salta,M,7.0,True,31.0,15275639
+M. Birge,Gimnasia y Tiro de Salta,F,7.0,True,25.0,15275641
+L. Brochero,San Miguel,M,7.0,True,13.0,15275635
+G. Castellani,Club Ferro Carril Oeste,M,6.9,True,13.0,15275639

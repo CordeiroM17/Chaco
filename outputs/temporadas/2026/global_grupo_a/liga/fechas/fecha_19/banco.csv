@@ -1,0 +1,11 @@
+player,team,position,rating,is_sub,minutes,event_id
+I. Valsagiácomo,Racing de Córdoba,D,7.5,True,10.0,15275704
+M. Benegas,Club Ferro Carril Oeste,F,7.4,True,30.0,15275711
+I. Antunes,CA Mitre,M,7.3,True,28.0,15275705
+N. Molina,San Telmo,M,7.3,True,44.0,15275711
+M. Acosta,Estudiantes de Buenos Aires,M,7.2,True,26.0,15275704
+P. Moyano,Defensores de Belgrano,M,7.1,True,34.0,15275708
+F. Aguirre,San Miguel,D,7.0,True,23.0,15275710
+A. Pucheta,Central Norte de Salta,D,7.0,True,13.0,15275710
+R. Luna,Ferrocarril Midland,F,7.0,True,44.0,15275713
+G. Castellani,Club Ferro Carril Oeste,M,7.0,True,29.0,15275711

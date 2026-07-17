@@ -1,0 +1,12 @@
+player,team,position,rating,is_sub,minutes,event_id
+S. López,Los Andes,G,9.3,False,90.0,15275523
+P. Sanz,Central Norte de Salta,D,8.3,False,90.0,15275526
+I. A. Pérez,Defensores de Belgrano,D,8.0,False,90.0,15275528
+N. Kihm,Club Ferro Carril Oeste,D,8.0,False,90.0,15275525
+R. Gamarra,San Telmo,D,7.9,False,90.0,15275522
+M. Oses,San Miguel,M,7.8,False,77.0,15275521
+R. Castro,Agropecuario Argentino,M,7.7,False,90.0,15275529
+F. Recalde,Deportivo Madryn,M,7.6,False,90.0,15275527
+D. Rostagno,Estudiantes de Buenos Aires,F,7.8,False,64.0,15275525
+M. Asenjo,Los Andes,F,7.6,False,88.0,15275523
+M. Cachi,Gimnasia Jujuy,F,7.5,False,57.0,15275529

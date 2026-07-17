@@ -1,0 +1,11 @@
+player,team,position,rating,is_sub,minutes,event_id
+E. Hoyos,Club Ferro Carril Oeste,M,7.7,True,34.0,16038628
+M. Vázquez,CA Mitre,M,7.6,True,45.0,15275561
+L. Ciccolini,Defensores de Belgrano,M,7.4,True,44.0,15275564
+E. F. Peralta,San Telmo,M,7.1,True,35.0,15275559
+M. Casa,Gimnasia Jujuy,M,7.1,True,26.0,15275565
+J. Menéndez,Club Ferro Carril Oeste,M,7.1,True,11.0,16038628
+M. Lucero,Central Norte de Salta,D,7.0,True,76.0,15275563
+P. Argañaraz,Gimnasia Jujuy,M,7.0,True,26.0,15275565
+F. Monticelli,Racing de Córdoba,F,7.0,True,30.0,15275556
+E. Cuello,Ciudad de Bolivar,M,7.0,True,5.0,15275563

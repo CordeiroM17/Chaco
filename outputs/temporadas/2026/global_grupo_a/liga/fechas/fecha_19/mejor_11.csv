@@ -1,0 +1,12 @@
+player,team,position,rating,is_sub,minutes,event_id
+B. Galvan,Almirante Brown,G,7.9,False,90.0,15275706
+M. Penepil,Ferrocarril Midland,D,7.8,False,90.0,15275713
+E. Osuna,Club Ferro Carril Oeste,D,7.7,False,90.0,15275711
+F. Vázquez,Deportivo Morón,D,7.6,False,90.0,15275708
+M. Gomez,Racing de Córdoba,D,7.6,False,90.0,15275704
+M. Roseti,Ferrocarril Midland,M,8.2,False,90.0,15275713
+L. Parisi,Club Ferro Carril Oeste,M,8.1,False,87.0,15275711
+I. Ramírez,San Miguel,M,8.0,False,90.0,15275710
+M. S. Romero,Chaco For Ever,F,8.1,False,86.0,15275712
+G. Sánchez,Ciudad de Bolivar,F,8.1,False,90.0,15275707
+E. Aguirre,Defensores de Belgrano,F,7.7,False,80.0,15275708

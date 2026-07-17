@@ -1,0 +1,12 @@
+player,team,position,rating,is_sub,minutes,event_id
+J. Enrico,San Telmo,G,8.6,False,90.0,15275688
+P. Barrios,Club Atletico Colón,D,8.0,False,90.0,15275690
+M. Padilla,Central Norte de Salta,D,7.9,False,90.0,15275688
+N. D. Dematei,Gimnasia Jujuy,D,7.8,False,90.0,15275695
+S. Corda,Club Ferro Carril Oeste,D,7.7,False,90.0,15275687
+A. Chamorro,Los Andes,M,8.6,False,81.0,15275693
+N. Solís,Deportivo Madryn,M,8.4,False,90.0,15275689
+J. Franzoni,Gimnasia Jujuy,M,8.2,False,71.0,15275695
+F. Villarreal,Los Andes,F,8.7,False,86.0,15275693
+P. Chavarría,Racing de Córdoba,F,8.2,False,90.0,15275686
+M. Asenjo,Los Andes,F,8.0,False,81.0,15275693

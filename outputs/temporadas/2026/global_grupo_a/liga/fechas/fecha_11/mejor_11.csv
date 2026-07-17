@@ -1,0 +1,12 @@
+player,team,position,rating,is_sub,minutes,event_id
+R. Ramírez,Godoy Cruz,G,8.4,False,90.0,15275557
+E. Osuna,Club Ferro Carril Oeste,D,7.8,False,90.0,16038628
+F. Ferrari,CA Mitre,D,7.7,False,90.0,15275561
+D. Franco,Los Andes,D,7.7,False,90.0,15275558
+E. Cardozo,Almirante Brown,D,7.6,False,90.0,16038628
+J. J. P. Lapegüe,San Telmo,M,8.3,False,84.0,15275559
+A. Benítez,Defensores de Belgrano,M,7.9,False,90.0,15275564
+N. Solís,Deportivo Madryn,M,7.8,False,81.0,15275564
+L. Silba,Deportivo Madryn,F,7.7,False,90.0,15275564
+M. Campos,Club Ferro Carril Oeste,F,7.6,False,79.0,16038628
+I. Enriquez,Chaco For Ever,F,7.5,False,66.0,15275561

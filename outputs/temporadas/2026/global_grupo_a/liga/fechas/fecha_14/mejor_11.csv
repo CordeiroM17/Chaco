@@ -1,0 +1,12 @@
+player,team,position,rating,is_sub,minutes,event_id
+N. Caprio,Chaco For Ever,G,8.7,False,90.0,15275614
+F. Ferrari,CA Mitre,D,8.1,False,90.0,15275617
+I. Antunes,CA Mitre,D,7.9,False,60.0,15275617
+E. Díaz,San Telmo,D,7.7,False,90.0,15275616
+N. D. Dematei,Gimnasia Jujuy,D,7.7,False,90.0,15275621
+A. Ramírez,CA Mitre,M,9.2,False,90.0,15275617
+R. Centurión,Racing de Córdoba,M,8.5,False,90.0,15275612
+F. Molina,Gimnasia Jujuy,M,8.2,False,84.0,15275621
+M. Machado,CA Mitre,F,8.1,False,78.0,15275617
+F. Borda,Central Norte de Salta,F,7.9,False,90.0,15275612
+D. Rostagno,Estudiantes de Buenos Aires,F,7.7,False,90.0,15275618

@@ -1,0 +1,12 @@
+player,team,position,rating,is_sub,minutes,event_id
+M. Álvarez,Gimnasia Jujuy,G,7.8,False,90.0,15275511
+G. Cosaro,Gimnasia Jujuy,D,8.1,False,90.0,15275511
+D. Franco,Los Andes,D,8.0,False,90.0,15275507
+L. Arce,Godoy Cruz,D,7.9,False,90.0,15275508
+N. Ortíz,Deportivo Madryn,D,7.8,False,90.0,15275504
+I. Antonio,Club Atletico Colón,M,8.6,False,75.0,15275510
+V. Poggi,Godoy Cruz,M,8.0,False,90.0,15275508
+F. Ardiles,Estudiantes de Buenos Aires,M,7.9,False,90.0,15275505
+G. M. Fernandez,CA Mitre,F,7.6,False,90.0,15275504
+M. Asenjo,Los Andes,F,7.6,False,85.0,15275507
+J. Correa,Estudiantes de Buenos Aires,F,7.5,False,90.0,15275505

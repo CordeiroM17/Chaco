@@ -1,0 +1,12 @@
+player,team,position,rating,is_sub,minutes,event_id
+S. López,Los Andes,G,8.7,False,90.0,15275470
+A. Gutiérrez,Deportivo Madryn,D,8.1,False,90.0,15275472
+N. Ortíz,Deportivo Madryn,D,8.0,False,90.0,15275472
+N. Kihm,Club Ferro Carril Oeste,D,7.9,False,90.0,15275470
+N. Brunet,Godoy Cruz,D,7.7,False,90.0,15275469
+J. González,San Telmo,M,8.8,False,81.0,15275467
+J. M. Olivares,Deportivo Morón,M,8.3,False,66.0,15275468
+L. Cordoba,Racing de Córdoba,M,7.9,False,84.0,15275466
+F. Tisera,San Telmo,F,7.9,False,81.0,15275467
+G. Berterame,Deportivo Morón,F,7.5,False,74.0,15275468
+S. Rosales,CA Mitre,F,7.5,False,90.0,15275473

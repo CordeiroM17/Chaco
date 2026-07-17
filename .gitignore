@@ -1,0 +1,28 @@
+# Entorno virtual (no debe versionarse)
+venv/
+.venv/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Secrets
+.env
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Dataset
+data
+
+# Video
+models
+simular
+
+# Claude
+.claude

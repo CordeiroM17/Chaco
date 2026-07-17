@@ -1,0 +1,12 @@
+player,team,position,rating,is_sub,minutes,event_id
+N. Galardi,Deportivo Maipú,G,8.5,False,90.0,15275585
+N. D. Dematei,Gimnasia Jujuy,D,7.8,False,90.0,15275585
+D. Minervino,Gimnasia Jujuy,D,7.7,False,67.0,15275585
+F. Ferrari,CA Mitre,D,7.6,False,90.0,15275580
+G. Cosaro,Gimnasia Jujuy,D,7.6,False,90.0,15275585
+L. Cordoba,Racing de Córdoba,M,9.0,False,90.0,15275575
+E. Hoyos,Club Ferro Carril Oeste,M,8.2,False,63.0,15275578
+F. Molina,Gimnasia Jujuy,M,8.0,False,85.0,15275585
+E. Dening,Club Ferro Carril Oeste,F,9.3,False,90.0,15275578
+I. Lago,Club Atletico Colón,F,8.3,False,90.0,15275583
+F. Fagundez,Deportivo Morón,F,8.0,False,70.0,15275584

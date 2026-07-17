@@ -1,0 +1,324 @@
+{
+  "id": "1139701",
+  "url": "https://www.transfermarkt.com.ar/federico-moreno/profil/spieler/1139701",
+  "bio": {
+    "nombre": "Federico Moreno",
+    "valor_mercado": "25 mil €",
+    "nombre_completo": "Federico Esequiel Moreno",
+    "nacimiento": "23/02/2001 (25)",
+    "lugar_nacimiento": "Córdoba",
+    "altura": "1,90 m",
+    "nacionalidad": "Argentina",
+    "posicion": "Defensa - Defensa central",
+    "pie": "Derecho",
+    "club_actual": "Círculo Deportivo",
+    "rol": "Defensa central"
+  },
+  "movimientos": [
+    {
+      "temporada": "25/26",
+      "fecha": "30/06/2026",
+      "desde": "Nueva Chicago",
+      "hacia": "Circulo Dep.",
+      "valor": "Fin de cesión"
+    },
+    {
+      "temporada": "25/26",
+      "fecha": "03/01/2026",
+      "desde": "Circulo Dep.",
+      "hacia": "Nueva Chicago",
+      "valor": "Cesión"
+    },
+    {
+      "temporada": "25/26",
+      "fecha": "31/12/2025",
+      "desde": "Dep. Rincón",
+      "hacia": "Circulo Dep.",
+      "valor": "Fin de cesión"
+    },
+    {
+      "temporada": "24/25",
+      "fecha": "06/02/2025",
+      "desde": "Circulo Dep.",
+      "hacia": "Dep. Rincón",
+      "valor": "Cesión"
+    },
+    {
+      "temporada": "24/25",
+      "fecha": "31/12/2024",
+      "desde": "General Paz Jrs",
+      "hacia": "Circulo Dep.",
+      "valor": "Fin de cesión"
+    },
+    {
+      "temporada": "24/25",
+      "fecha": "28/09/2024",
+      "desde": "Circulo Dep.",
+      "hacia": "General Paz Jrs",
+      "valor": "Cesión"
+    },
+    {
+      "temporada": "23/24",
+      "fecha": "01/03/2024",
+      "desde": "Crucero",
+      "hacia": "Circulo Dep.",
+      "valor": "Libre"
+    },
+    {
+      "temporada": "22/23",
+      "fecha": "01/01/2023",
+      "desde": "Crucero II",
+      "hacia": "Crucero",
+      "valor": "-"
+    },
+    {
+      "temporada": "20/21",
+      "fecha": "01/01/2021",
+      "desde": "Crucero U19",
+      "hacia": "Crucero II",
+      "valor": "-"
+    }
+  ],
+  "trayectoria": [
+    "Crucero U19",
+    "Crucero II",
+    "Crucero",
+    "Circulo Dep.",
+    "General Paz Jrs",
+    "Circulo Dep.",
+    "Dep. Rincón",
+    "Circulo Dep.",
+    "Nueva Chicago",
+    "Circulo Dep."
+  ],
+  "trayectoria_detallada": [
+    {
+      "club": "Crucero U19",
+      "desde": null,
+      "hasta": 2021,
+      "anios": "hasta 2021",
+      "logo_url": "https://tmssl.akamaized.net/images/wappen/homepageWappen70x70/54491.png?lm=1537646035",
+      "es_chaco": false,
+      "logo": "data/refuerzos/1139701/logos/crucero_u19.png"
+    },
+    {
+      "club": "Crucero II",
+      "desde": 2021,
+      "hasta": 2023,
+      "anios": "2021–2023",
+      "logo_url": "https://tmssl.akamaized.net/images/wappen/homepageWappen70x70/54490.png?lm=1537646035",
+      "es_chaco": false,
+      "logo": "data/refuerzos/1139701/logos/crucero_ii.png"
+    },
+    {
+      "club": "Crucero",
+      "desde": 2023,
+      "hasta": 2024,
+      "anios": "2023–2024",
+      "logo_url": "https://tmssl.akamaized.net/images/wappen/homepageWappen70x70/26157.png?lm=1537646035",
+      "es_chaco": false,
+      "logo": "data/refuerzos/1139701/logos/crucero.png"
+    },
+    {
+      "club": "Circulo Dep.",
+      "desde": 2024,
+      "hasta": 2024,
+      "anios": "2024",
+      "logo_url": "https://tmssl.akamaized.net/images/wappen/homepageWappen70x70/78072.png?lm=1714231005",
+      "es_chaco": false,
+      "logo": "data/refuerzos/1139701/logos/circulo_dep.png"
+    },
+    {
+      "club": "General Paz Jrs",
+      "desde": 2024,
+      "hasta": 2024,
+      "anios": "2024",
+      "logo_url": "https://tmssl.akamaized.net/images/wappen/homepageWappen70x70/19835.png?lm=1512255417",
+      "es_chaco": false,
+      "logo": "data/refuerzos/1139701/logos/general_paz_jrs.png"
+    },
+    {
+      "club": "Circulo Dep.",
+      "desde": 2024,
+      "hasta": 2025,
+      "anios": "2024–2025",
+      "logo_url": "https://tmssl.akamaized.net/images/wappen/homepageWappen70x70/78072.png?lm=1714231005",
+      "es_chaco": false,
+      "logo": "data/refuerzos/1139701/logos/circulo_dep.png"
+    },
+    {
+      "club": "Dep. Rincón",
+      "desde": 2025,
+      "hasta": 2025,
+      "anios": "2025",
+      "logo_url": "https://tmssl.akamaized.net/images/wappen/homepageWappen70x70/83668.png?lm=1707922557",
+      "es_chaco": false,
+      "logo": "data/refuerzos/1139701/logos/dep_rinc_n.png"
+    },
+    {
+      "club": "Circulo Dep.",
+      "desde": 2025,
+      "hasta": 2026,
+      "anios": "2025–2026",
+      "logo_url": "https://tmssl.akamaized.net/images/wappen/homepageWappen70x70/78072.png?lm=1714231005",
+      "es_chaco": false,
+      "logo": "data/refuerzos/1139701/logos/circulo_dep.png"
+    },
+    {
+      "club": "Nueva Chicago",
+      "desde": 2026,
+      "hasta": 2026,
+      "anios": "2026",
+      "logo_url": "https://tmssl.akamaized.net/images/wappen/homepageWappen70x70/10534_1775776988.png?lm=1775776988",
+      "es_chaco": false,
+      "logo": "data/refuerzos/1139701/logos/nueva_chicago.png"
+    },
+    {
+      "club": "Circulo Dep.",
+      "desde": 2026,
+      "hasta": null,
+      "anios": "2026–hoy",
+      "logo_url": "https://tmssl.akamaized.net/images/wappen/homepageWappen70x70/78072.png?lm=1714231005",
+      "es_chaco": false,
+      "logo": "data/refuerzos/1139701/logos/circulo_dep.png"
+    }
+  ],
+  "clubes": [
+    "Crucero U19",
+    "Crucero II",
+    "Crucero",
+    "Circulo Dep.",
+    "General Paz Jrs",
+    "Dep. Rincón",
+    "Nueva Chicago"
+  ],
+  "carrera": [
+    {
+      "competicion": "Torneo Federal A",
+      "partidos": 36,
+      "goles": 1,
+      "asistencias": 0,
+      "minutos": 2403
+    },
+    {
+      "competicion": "Federal A - Fase Campeonato",
+      "partidos": 8,
+      "goles": 0,
+      "asistencias": 0,
+      "minutos": 709
+    },
+    {
+      "competicion": "Federal A - Fase Reválida",
+      "partidos": 8,
+      "goles": 0,
+      "asistencias": 0,
+      "minutos": 720
+    },
+    {
+      "competicion": "Federal A - Reválida Playoff",
+      "partidos": 4,
+      "goles": 0,
+      "asistencias": 0,
+      "minutos": 340
+    },
+    {
+      "competicion": "Primera Nacional",
+      "partidos": 3,
+      "goles": 0,
+      "asistencias": 0,
+      "minutos": 237
+    },
+    {
+      "competicion": "Torneo Fed. A Playoff",
+      "partidos": 2,
+      "goles": 0,
+      "asistencias": 0,
+      "minutos": 180
+    }
+  ],
+  "carrera_total": {
+    "partidos": 61,
+    "goles": 1,
+    "asistencias": 0,
+    "minutos": 4589
+  },
+  "por_temporada": [
+    {
+      "anio": 2026,
+      "competicion": "Primera Nacional",
+      "partidos": 3,
+      "goles": null,
+      "asistencias": null,
+      "minutos": 237
+    },
+    {
+      "anio": 2025,
+      "competicion": "Federal A - Reválida Playoff",
+      "partidos": 4,
+      "goles": null,
+      "asistencias": null,
+      "minutos": 340
+    },
+    {
+      "anio": 2025,
+      "competicion": "Torneo Fed. A Playoff",
+      "partidos": 2,
+      "goles": null,
+      "asistencias": null,
+      "minutos": 180
+    },
+    {
+      "anio": 2025,
+      "competicion": "Federal A - Fase Campeonato",
+      "partidos": 8,
+      "goles": null,
+      "asistencias": null,
+      "minutos": 709
+    },
+    {
+      "anio": 2025,
+      "competicion": "Torneo Federal A",
+      "partidos": 17,
+      "goles": 1,
+      "asistencias": null,
+      "minutos": 1404
+    },
+    {
+      "anio": 2024,
+      "competicion": "Federal A - Fase Reválida",
+      "partidos": 8,
+      "goles": null,
+      "asistencias": null,
+      "minutos": 720
+    },
+    {
+      "anio": 2024,
+      "competicion": "Torneo Federal A",
+      "partidos": 14,
+      "goles": null,
+      "asistencias": null,
+      "minutos": 902
+    },
+    {
+      "anio": 2023,
+      "competicion": "Torneo Federal A",
+      "partidos": 5,
+      "goles": null,
+      "asistencias": null,
+      "minutos": 97
+    }
+  ],
+  "ultimo_club": {
+    "club": "Nueva Chicago",
+    "anios": [
+      2026
+    ],
+    "partidos": 3,
+    "goles": 0,
+    "asistencias": 0,
+    "minutos": 237,
+    "min_por_partido": 79.0,
+    "veredicto": "Jugó pocos partidos"
+  },
+  "es_retorno": false
+}

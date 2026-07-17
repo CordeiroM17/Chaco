@@ -1,0 +1,12 @@
+player,team,position,rating,is_sub,minutes,event_id
+B. Galvan,Almirante Brown,G,8.4,False,90.0,15275671
+R. Gamarra,San Telmo,D,8.5,False,90.0,15275674
+P. Barrios,Club Atletico Colón,D,8.4,False,90.0,15275672
+G. Canto,Club Ferro Carril Oeste,D,7.8,False,90.0,15275676
+A. Tabares,All Boys,D,7.7,False,90.0,15275668
+I. Lago,Club Atletico Colón,M,8.6,False,90.0,15275672
+F. Lértora,Club Atletico Colón,M,8.1,False,90.0,15275672
+G. Melgarejo,Chaco For Ever,M,8.1,False,90.0,15275676
+A. G. Quintana,Atlanta,F,8.0,False,83.0,15275677
+L. Cordoba,Racing de Córdoba,F,7.6,False,90.0,15275668
+J. Mateo,Central Norte de Salta,F,7.6,False,90.0,15275675

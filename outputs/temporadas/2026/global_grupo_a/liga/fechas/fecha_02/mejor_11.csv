@@ -1,0 +1,12 @@
+player,team,position,rating,is_sub,minutes,event_id
+M. Monllor,Acassuso,G,8.4,False,90.0,15275393
+G. Paredes,San Telmo,D,8.0,False,90.0,15464032
+N. Kihm,Club Ferro Carril Oeste,D,7.8,False,71.0,15459007
+N. D. Dematei,Gimnasia Jujuy,D,7.8,False,90.0,15463211
+F. Castet,Club Atletico Colón,D,7.5,False,90.0,15463921
+T. Almada,Almirante Brown,M,8.5,False,70.0,15420761
+A. Hermoso,Acassuso,M,8.0,False,85.0,15275393
+M. Meléndez,Club Atlético Chacarita Juniors,M,7.9,False,61.0,15463211
+S. Vera,Almirante Brown,F,7.5,False,70.0,15420761
+E. González,Defensores de Belgrano,F,7.5,False,90.0,15275398
+J. I. Barbieri,Club Atlético Chacarita Juniors,F,7.3,False,79.0,15463211

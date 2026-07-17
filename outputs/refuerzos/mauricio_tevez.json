@@ -1,0 +1,460 @@
+{
+  "id": "334097",
+  "url": "https://www.transfermarkt.com.ar/mauricio-tevez/profil/spieler/334097",
+  "bio": {
+    "nombre": "Mauricio Tévez",
+    "valor_mercado": "25 mil €",
+    "nombre_completo": "Mauricio Alejandro Tévez",
+    "nacimiento": "31/07/1996 (29)",
+    "lugar_nacimiento": "Rosario",
+    "altura": "1,70 m",
+    "nacionalidad": "Argentina",
+    "posicion": "Delantero - Extremo derecho",
+    "pie": "Derecho",
+    "club_actual": "AA Estudiantes (Río Cuarto)",
+    "rol": "Extremo derecho"
+  },
+  "movimientos": [
+    {
+      "temporada": "23/24",
+      "fecha": "04/01/2024",
+      "desde": "Douglas Haig",
+      "hacia": "Estudiantes RC",
+      "valor": "Libre"
+    },
+    {
+      "temporada": "22/23",
+      "fecha": "01/01/2023",
+      "desde": "Chacarita Jrs.",
+      "hacia": "Douglas Haig",
+      "valor": "Libre"
+    },
+    {
+      "temporada": "21/22",
+      "fecha": "07/02/2022",
+      "desde": "Guaireña FC",
+      "hacia": "Chacarita Jrs.",
+      "valor": "Libre"
+    },
+    {
+      "temporada": "21/22",
+      "fecha": "01/07/2021",
+      "desde": "Luqueño",
+      "hacia": "Guaireña FC",
+      "valor": "?"
+    },
+    {
+      "temporada": "20/21",
+      "fecha": "23/10/2020",
+      "desde": "AD Oliveirense",
+      "hacia": "Luqueño",
+      "valor": "?"
+    },
+    {
+      "temporada": "19/20",
+      "fecha": "01/01/2020",
+      "desde": "Newell's",
+      "hacia": "AD Oliveirense",
+      "valor": "Libre"
+    },
+    {
+      "temporada": "18/19",
+      "fecha": "30/06/2019",
+      "desde": "Def. y Justicia",
+      "hacia": "Newell's",
+      "valor": "Fin de cesión"
+    },
+    {
+      "temporada": "18/19",
+      "fecha": "06/08/2018",
+      "desde": "Newell's",
+      "hacia": "Def. y Justicia",
+      "valor": "Cesión"
+    },
+    {
+      "temporada": "17/18",
+      "fecha": "30/06/2018",
+      "desde": "Instituto ACC",
+      "hacia": "Newell's",
+      "valor": "Fin de cesión"
+    },
+    {
+      "temporada": "17/18",
+      "fecha": "23/01/2018",
+      "desde": "Newell's",
+      "hacia": "Instituto ACC",
+      "valor": "Cesión"
+    },
+    {
+      "temporada": "14/15",
+      "fecha": "01/07/2014",
+      "desde": "Newell's U20",
+      "hacia": "Newell's",
+      "valor": "-"
+    }
+  ],
+  "trayectoria": [
+    "Newell's U20",
+    "Newell's",
+    "Instituto ACC",
+    "Newell's",
+    "Def. y Justicia",
+    "Newell's",
+    "AD Oliveirense",
+    "Luqueño",
+    "Guaireña FC",
+    "Chacarita Jrs.",
+    "Douglas Haig",
+    "Estudiantes RC"
+  ],
+  "trayectoria_detallada": [
+    {
+      "club": "Newell's U20",
+      "desde": null,
+      "hasta": 2014,
+      "anios": "hasta 2014",
+      "logo_url": "https://tmssl.akamaized.net/images/wappen/homepageWappen70x70/15107.png?lm=1622640330",
+      "es_chaco": false,
+      "logo": "data/refuerzos/334097/logos/newell_s_u20.png"
+    },
+    {
+      "club": "Newell's",
+      "desde": 2014,
+      "hasta": 2018,
+      "anios": "2014–2018",
+      "logo_url": "https://tmssl.akamaized.net/images/wappen/homepageWappen70x70/1286.png?lm=1622640330",
+      "es_chaco": false,
+      "logo": "data/refuerzos/334097/logos/newell_s.png"
+    },
+    {
+      "club": "Instituto ACC",
+      "desde": 2018,
+      "hasta": 2018,
+      "anios": "2018",
+      "logo_url": "https://tmssl.akamaized.net/images/wappen/homepageWappen70x70/1829.png?lm=1672243566",
+      "es_chaco": false,
+      "logo": "data/refuerzos/334097/logos/instituto_acc.png"
+    },
+    {
+      "club": "Newell's",
+      "desde": 2018,
+      "hasta": 2018,
+      "anios": "2018",
+      "logo_url": "https://tmssl.akamaized.net/images/wappen/homepageWappen70x70/1286.png?lm=1622640330",
+      "es_chaco": false,
+      "logo": "data/refuerzos/334097/logos/newell_s.png"
+    },
+    {
+      "club": "Def. y Justicia",
+      "desde": 2018,
+      "hasta": 2019,
+      "anios": "2018–2019",
+      "logo_url": "https://tmssl.akamaized.net/images/wappen/homepageWappen70x70/2402.png?lm=1642110776",
+      "es_chaco": false,
+      "logo": "data/refuerzos/334097/logos/def_y_justicia.png"
+    },
+    {
+      "club": "Newell's",
+      "desde": 2019,
+      "hasta": 2020,
+      "anios": "2019–2020",
+      "logo_url": "https://tmssl.akamaized.net/images/wappen/homepageWappen70x70/1286.png?lm=1622640330",
+      "es_chaco": false,
+      "logo": "data/refuerzos/334097/logos/newell_s.png"
+    },
+    {
+      "club": "AD Oliveirense",
+      "desde": 2020,
+      "hasta": 2020,
+      "anios": "2020",
+      "logo_url": "https://tmssl.akamaized.net/images/wappen/homepageWappen70x70/23315.png?lm=1552410510",
+      "es_chaco": false,
+      "logo": "data/refuerzos/334097/logos/ad_oliveirense.png"
+    },
+    {
+      "club": "Luqueño",
+      "desde": 2020,
+      "hasta": 2021,
+      "anios": "2020–2021",
+      "logo_url": "https://tmssl.akamaized.net/images/wappen/homepageWappen70x70/7656.png?lm=1718656390",
+      "es_chaco": false,
+      "logo": "data/refuerzos/334097/logos/luque_o.png"
+    },
+    {
+      "club": "Guaireña FC",
+      "desde": 2021,
+      "hasta": 2022,
+      "anios": "2021–2022",
+      "logo_url": "https://tmssl.akamaized.net/images/wappen/homepageWappen70x70/63181.png?lm=1583247921",
+      "es_chaco": false,
+      "logo": "data/refuerzos/334097/logos/guaire_a_fc.png"
+    },
+    {
+      "club": "Chacarita Jrs.",
+      "desde": 2022,
+      "hasta": 2023,
+      "anios": "2022–2023",
+      "logo_url": "https://tmssl.akamaized.net/images/wappen/homepageWappen70x70/2154_1775776591.png?lm=1775776591",
+      "es_chaco": false,
+      "logo": "data/refuerzos/334097/logos/chacarita_jrs.png"
+    },
+    {
+      "club": "Douglas Haig",
+      "desde": 2023,
+      "hasta": 2024,
+      "anios": "2023–2024",
+      "logo_url": "https://tmssl.akamaized.net/images/wappen/homepageWappen70x70/14718.png?lm=1675779209",
+      "es_chaco": false,
+      "logo": "data/refuerzos/334097/logos/douglas_haig.png"
+    },
+    {
+      "club": "Estudiantes RC",
+      "desde": 2024,
+      "hasta": null,
+      "anios": "2024–2026",
+      "logo_url": "https://tmssl.akamaized.net/images/wappen/homepageWappen70x70/14602.png?lm=1512253715",
+      "es_chaco": false,
+      "logo": "data/refuerzos/334097/logos/estudiantes_rc.png"
+    }
+  ],
+  "clubes": [
+    "Newell's U20",
+    "Newell's",
+    "Instituto ACC",
+    "Def. y Justicia",
+    "AD Oliveirense",
+    "Luqueño",
+    "Guaireña FC",
+    "Chacarita Jrs.",
+    "Douglas Haig",
+    "Estudiantes RC"
+  ],
+  "carrera": [
+    {
+      "competicion": "Primera Nacional",
+      "partidos": 37,
+      "goles": 0,
+      "asistencias": 2,
+      "minutos": 1295
+    },
+    {
+      "competicion": "Liga Profesional (- 23/24)",
+      "partidos": 27,
+      "goles": 1,
+      "asistencias": 3,
+      "minutos": 958
+    },
+    {
+      "competicion": "Torneo Federal A",
+      "partidos": 23,
+      "goles": 2,
+      "asistencias": 1,
+      "minutos": 1293
+    },
+    {
+      "competicion": "Copa Argentina",
+      "partidos": 5,
+      "goles": 0,
+      "asistencias": 0,
+      "minutos": 217
+    },
+    {
+      "competicion": "Torneo Fed. A Playoff",
+      "partidos": 4,
+      "goles": 0,
+      "asistencias": 0,
+      "minutos": 251
+    },
+    {
+      "competicion": "Primera División Apertura",
+      "partidos": 3,
+      "goles": 0,
+      "asistencias": 0,
+      "minutos": 80
+    },
+    {
+      "competicion": "Torneo Apertura",
+      "partidos": 2,
+      "goles": 0,
+      "asistencias": 0,
+      "minutos": 36
+    },
+    {
+      "competicion": "Asc. Fed. A & Prim. B Metro",
+      "partidos": 1,
+      "goles": 0,
+      "asistencias": 0,
+      "minutos": 56
+    },
+    {
+      "competicion": "Primera División Clausura",
+      "partidos": 1,
+      "goles": 0,
+      "asistencias": 0,
+      "minutos": 20
+    },
+    {
+      "competicion": "Prim. Nacional - Reducido",
+      "partidos": 1,
+      "goles": 0,
+      "asistencias": 0,
+      "minutos": 4
+    },
+    {
+      "competicion": "Liguilla Pre-Sudamericana (-14/15)",
+      "partidos": 1,
+      "goles": 0,
+      "asistencias": 0,
+      "minutos": 70
+    }
+  ],
+  "carrera_total": {
+    "partidos": 105,
+    "goles": 3,
+    "asistencias": 6,
+    "minutos": 4280
+  },
+  "por_temporada": [
+    {
+      "anio": 2026,
+      "competicion": "Torneo Apertura",
+      "partidos": 2,
+      "goles": null,
+      "asistencias": null,
+      "minutos": 36
+    },
+    {
+      "anio": 2026,
+      "competicion": "Copa Argentina",
+      "partidos": 1,
+      "goles": null,
+      "asistencias": null,
+      "minutos": 77
+    },
+    {
+      "anio": 2025,
+      "competicion": "Primera Nacional",
+      "partidos": 8,
+      "goles": null,
+      "asistencias": null,
+      "minutos": 222
+    },
+    {
+      "anio": 2024,
+      "competicion": "Primera Nacional",
+      "partidos": 16,
+      "goles": null,
+      "asistencias": null,
+      "minutos": 495
+    },
+    {
+      "anio": 2023,
+      "competicion": "Asc. Fed. A & Prim. B Metro",
+      "partidos": 1,
+      "goles": null,
+      "asistencias": null,
+      "minutos": 56
+    },
+    {
+      "anio": 2023,
+      "competicion": "Torneo Fed. A Playoff",
+      "partidos": 4,
+      "goles": null,
+      "asistencias": null,
+      "minutos": 251
+    },
+    {
+      "anio": 2023,
+      "competicion": "Torneo Federal A",
+      "partidos": 23,
+      "goles": 2,
+      "asistencias": 1,
+      "minutos": 1293
+    },
+    {
+      "anio": 2022,
+      "competicion": "Primera Nacional",
+      "partidos": 13,
+      "goles": null,
+      "asistencias": 2,
+      "minutos": 578
+    },
+    {
+      "anio": 2021,
+      "competicion": "Primera División Apertura",
+      "partidos": 3,
+      "goles": null,
+      "asistencias": null,
+      "minutos": 80
+    },
+    {
+      "anio": 2020,
+      "competicion": "Primera División Clausura",
+      "partidos": 1,
+      "goles": null,
+      "asistencias": null,
+      "minutos": 20
+    },
+    {
+      "anio": 2018,
+      "competicion": "Prim. Nacional - Reducido",
+      "partidos": 1,
+      "goles": null,
+      "asistencias": null,
+      "minutos": 4
+    },
+    {
+      "anio": 2017,
+      "competicion": "Copa Argentina",
+      "partidos": 2,
+      "goles": null,
+      "asistencias": null,
+      "minutos": 37
+    },
+    {
+      "anio": 2016,
+      "competicion": "Copa Argentina",
+      "partidos": 2,
+      "goles": null,
+      "asistencias": null,
+      "minutos": 103
+    },
+    {
+      "anio": 2016,
+      "competicion": "Liga Profesional (- 23/24)",
+      "partidos": 10,
+      "goles": 1,
+      "asistencias": null,
+      "minutos": 242
+    },
+    {
+      "anio": 2015,
+      "competicion": "Liguilla Pre-Sudamericana (-14/15)",
+      "partidos": 1,
+      "goles": null,
+      "asistencias": null,
+      "minutos": 70
+    },
+    {
+      "anio": 2015,
+      "competicion": "Liga Profesional (- 23/24)",
+      "partidos": 17,
+      "goles": null,
+      "asistencias": 3,
+      "minutos": 716
+    }
+  ],
+  "ultimo_club": {
+    "club": "Estudiantes RC",
+    "anios": [
+      2024
+    ],
+    "partidos": 16,
+    "goles": 0,
+    "asistencias": 0,
+    "minutos": 495,
+    "min_por_partido": 30.9,
+    "veredicto": "Poco rodaje: mayormente suplente"
+  },
+  "es_retorno": false
+}

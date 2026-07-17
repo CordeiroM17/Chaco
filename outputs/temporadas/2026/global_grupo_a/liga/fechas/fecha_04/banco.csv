@@ -1,0 +1,11 @@
+player,team,position,rating,is_sub,minutes,event_id
+I. Vera,Estudiantes de Buenos Aires,F,8.9,True,35.0,15943802
+L. Viano,Racing de Córdoba,D,7.5,True,45.0,15943811
+M. Casa,Gimnasia Jujuy,M,7.5,True,45.0,15943801
+B. Quintana,Ciudad de Bolivar,M,7.4,True,11.0,15943802
+T. Almada,Almirante Brown,M,7.3,True,19.0,15943808
+J. E. Martínez,Almirante Brown,M,7.2,True,27.0,15943808
+S. Vera,Almirante Brown,F,7.2,True,44.0,15943808
+F. Ortiz,Racing de Córdoba,M,7.2,True,37.0,15943811
+G. Baier,Güemes,M,7.1,True,44.0,15943801
+S. Martínez,Godoy Cruz,M,7.0,True,27.0,15943810

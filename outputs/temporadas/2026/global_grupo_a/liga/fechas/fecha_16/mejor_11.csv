@@ -1,0 +1,12 @@
+player,team,position,rating,is_sub,minutes,event_id
+J. Enrico,San Telmo,G,8.8,False,90.0,15275653
+M. Albarracin,Estudiantes de Buenos Aires,D,7.9,False,90.0,15275657
+M. Lazarte,Gimnasia Jujuy,D,7.7,False,90.0,16250939
+A. Sosa,Deportivo Madryn,D,7.7,False,90.0,15275652
+A. Tabares,All Boys,D,7.6,False,90.0,15275658
+M. Cachi,Gimnasia Jujuy,M,8.2,False,76.0,16250939
+L. Ciccolini,Defensores de Belgrano,M,8.1,False,80.0,15275653
+N. Yeri,Ciudad de Bolivar,M,8.0,False,90.0,15275654
+N. Bazán,Almirante Brown,F,7.6,False,81.0,15275655
+L. Marinucci,Chaco For Ever,F,7.5,False,90.0,15275651
+E. González,Defensores de Belgrano,F,7.4,False,80.0,15275653
