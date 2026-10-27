@@ -1,0 +1,35 @@
+Fecha 34: así está la pelea por no descender
+
+Descienden dos equipos. Así llegan los de abajo:
+14° Mitre, 36 puntos
+15° Central Norte, 34 puntos
+16° All Boys, 34 puntos
+17° Acassuso, 32 puntos
+18° San Miguel, 32 puntos
+Chaco For Ever está 10° con 40.
+
+Probabilidad de descender al final del torneo:
+Acassuso 73%
+San Miguel 61%
+All Boys 32%
+Central Norte 18%
+Mitre 12%
+San Telmo 3%
+Defensores de Belgrano 1%
+Chaco For Ever, prácticamente 0%
+
+Chaco For Ever vs Central Norte (domingo, 17 h)
+Gana Chaco 42%, empate 38%, gana Central Norte 20%.
+
+Los partidos del sábado que nos importan (local, empate, visitante):
+Acassuso vs Madryn: 29%, 32%, 39%
+San Miguel vs Ciudad de Bolívar: 46%, 34%, 21%
+Los Andes vs All Boys: 46%, 34%, 19%
+
+La cuenta del Negro para salvarse el domingo:
+Si gana, se salva pase lo que pase.
+Si empata, se salva si San Miguel no le gana a Ciudad de Bolívar.
+Si pierde, se salva si no ganan ni Acassuso ni San Miguel.
+Chance de terminar la fecha salvado matemáticamente: 70%.
+
+Son probabilidades de un modelo estadístico, no pronósticos seguros. Datos con la tabla al cierre de la fecha 33.

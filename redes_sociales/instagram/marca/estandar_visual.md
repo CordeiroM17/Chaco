@@ -53,7 +53,7 @@ cita la fuente (SofaScore). Nada de promesas ni "call to action" de venta: es po
 
 ## Cómo se aplica
 
-Todo esto está codificado en `scripts/marca.py`. Nadie elige colores a mano: se llaman
+Todo esto está codificado en `nucleo/marca.py`. Nadie elige colores a mano: se llaman
 las constantes (`DORADO`, `NEGRO`, `TINTA`...) y las funciones de placa. Si algún día se
 cambia el acento, se toca un solo valor en `marca.py` y todas las placas se regeneran
 coherentes.

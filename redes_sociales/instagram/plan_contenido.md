@@ -45,7 +45,7 @@ Es el formato que más rinde. Plantilla de 5 placas:
 
 El gemelo del post-partido, pero para ANTES de jugar. Es un formato **fijo y
 reutilizable**: para cada fecha solo se cambian los datos del rival, no el diseño.
-Lo genera `scripts/carrusel_previa.py` (bloque `DATOS` arriba de todo). Se apoya
+Se genera con `python ig.py pre_partido <nombre>` (datos en `publicaciones/pre_partido/`). Se apoya
 en dos patas verificables — **cómo fue el último cruce** contra ese mismo rival y
 **cómo juega el rival** — y cierra con cómo llega el Negro. Plantilla de 8 placas:
 
@@ -66,8 +66,8 @@ no lo muestra (no rompe).
 **Identidad visual propia:** la previa NO va en el negro del post-partido. Usa el
 tema **hueso** (blanco cálido, texto negro, dorado de acento) para que el hincha
 reconozca de un vistazo que es una previa. El cambio de paleta lo maneja
-`scripts/temas.py` (reasigna los colores en runtime, sin duplicar `placas.py`);
-`carrusel_previa.py` ya trae `TEMA = "hueso"`. Otros temas listos para probar:
+`nucleo/temas.py` (reasigna los colores en runtime, sin duplicar `placas.py`);
+la plantilla `pre_partido` ya trae `TEMA = "hueso"`. Otros temas listos para probar:
 `blanco` (blanco puro) y `dorada` (fondo dorado, matchday). Para cambiarlo, se
 toca esa única línea.
 
@@ -141,7 +141,7 @@ la cuenta viva. Orden sugerido:
 
 ## Notas de arranque
 
-- Reservar el usuario `@chacoforever.stats` (o el que se elija) y cargarlo en `marca.py`.
+- Reservar el usuario `@chacoforever.stats` (o el que se elija) y cargarlo en `nucleo/marca.py`.
 - Cerrar y reabrir Claude Code para que tome las 46 skills de marketing recién instaladas.
   Con `/social` y `/content-strategy` se piden ideas y calendarios sobre este plan.
 - No es una cuenta oficial del club: aclararlo en la bio para evitar malentendidos.
