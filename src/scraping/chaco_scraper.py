@@ -39,6 +39,36 @@ ENDPOINTS = {
 }
 HEATMAP_ENDPOINT = "api/v1/event/{mid}/player/{pid}/heatmap"
 
+# Endpoints "base": si SofaScore no da alguno de estos, el partido no sirve.
+BASE_ENDPOINTS = ("event", "lineups", "incidents")
+# Endpoints de "análisis": SofaScore no siempre los publica (partidos de menor
+# cobertura se quedan sin shotmap / posiciones / momentum / etc.). Que falte uno
+# NO es un error a reintentar para siempre — se marca "empty" y no se vuelve a pedir.
+ANALYSIS_ENDPOINTS = ("statistics", "shotmap", "average_positions", "graph", "best_players")
+
+# Nombre del CSV limpio de cada endpoint (graph -> momentum es la única excepción).
+CSV_NAMES = {
+    "event":             "event_clean.csv",
+    "statistics":        "statistics_clean.csv",
+    "lineups":           "lineups_clean.csv",
+    "incidents":         "incidents_clean.csv",
+    "shotmap":           "shotmap_clean.csv",
+    "average_positions": "average_positions_clean.csv",
+    "graph":             "momentum_clean.csv",
+    "best_players":      "best_players_clean.csv",
+}
+
+# Manifiesto por partido: raw/_scrape_state.json = {endpoint: "ok"|"empty", ...}.
+#   "ok"    -> SofaScore devolvió datos, están en disco.
+#   "empty" -> SofaScore respondió sin datos (ese partido no tiene ese endpoint).
+#   ausente -> todavía no se intentó.
+STATE_FILE = "_scrape_state.json"
+
+# Días después del partido a partir de los cuales dejamos de esperar que SofaScore
+# agregue el análisis. Un partido más viejo que esto con endpoints de análisis
+# faltantes se marca "empty" definitivo en el backfill (SofaScore ya no lo va a cargar).
+ANALYSIS_GRACE_DAYS = 4
+
 PLAYER_STAT_FIELDS = {
     "rating":                 "rating",
     "minutesPlayed":          "minutes_played",
@@ -175,13 +205,20 @@ def _build_driver(headless=True):
         return driver, "selenium"
 
 
+class SofascoreChallenge(RuntimeError):
+    """La API sigue pidiendo el desafío anti-bot después de renovar la cookie."""
+
+
 class SofascoreClient:
     """Cliente liviano: navega a una URL de la API y devuelve el JSON parseado."""
 
-    def __init__(self, headless=True, min_delay=2.0, max_delay=4.5):
+    def __init__(self, headless=True, min_delay=None, max_delay=None):
         self.driver, self.backend = _build_driver(headless=headless)
-        self.min_delay = min_delay
-        self.max_delay = max_delay
+        # Pausa entre requests a la MISMA /event/{id} (los 8 endpoints de un
+        # partido, los heatmaps). Configurable en config.MIN_DELAY_EP/MAX_DELAY_EP.
+        self.min_delay = config.MIN_DELAY_EP if min_delay is None else min_delay
+        self.max_delay = config.MAX_DELAY_EP if max_delay is None else max_delay
+        self._solve_challenge()
 
     def close(self):
         try:
@@ -211,6 +248,24 @@ class SofascoreClient:
         except json.JSONDecodeError:
             return None, "not_json"
 
+    def _solve_challenge(self, timeout=25):
+        """Abre la home para que el JS de SofaScore resuelva el desafío anti-bot
+        y deje la cookie `sofa_captcha`. Sin esa cookie (o vencida) la API
+        responde 403 {"reason": "challenge"} — desde octubre 2026."""
+        try:
+            self.driver.get(SOFASCORE_BASE)
+        except Exception:
+            pass
+        t0 = time.time()
+        while time.time() - t0 < timeout:
+            try:
+                if any(c.get("name") == "sofa_captcha" for c in self.driver.get_cookies()):
+                    break
+            except Exception:
+                pass
+            time.sleep(1)
+        time.sleep(random.uniform(2, 4))
+
     def get_json(self, path, retries=3):
         url = f"{SOFASCORE_BASE}{path}"
         for attempt in range(1, retries + 1):
@@ -222,6 +277,15 @@ class SofascoreClient:
             data, status = self._read_body_json()
             if status == "ok":
                 if isinstance(data, dict) and "error" in data and len(data) == 1:
+                    err = data.get("error") or {}
+                    if isinstance(err, dict) and err.get("reason") == "challenge":
+                        # No es "sin datos": falta/venció la cookie del desafío.
+                        # Nunca devolver None acá, o el endpoint queda "empty".
+                        if attempt < retries:
+                            print(f"    [challenge] renuevo sofa_captcha (intento {attempt}/{retries})...")
+                            self._solve_challenge()
+                            continue
+                        raise SofascoreChallenge(f"403 challenge persistente en {path}")
                     return None
                 return data
             if status == "blocked":
@@ -525,28 +589,132 @@ def _save_csv(match_dir, filename, df):
     return True
 
 
+# ─── Manifiesto de estado por partido ───────────────────────────────────────
+# raw/_scrape_state.json guarda, por endpoint, si SofaScore ya lo devolvió
+# ("ok"), si respondió sin datos ("empty") o si todavía no se pidió (clave
+# ausente). Con esto el scraper NO vuelve a pedir lo que ya está ni lo que
+# SofaScore no tiene — el re-scrapeo de cada corrida post-fecha desaparece.
+
+def _state_path(match_dir):
+    return os.path.join(match_dir, "raw", STATE_FILE)
+
+
+def _load_state(match_dir):
+    p = _state_path(match_dir)
+    if not os.path.exists(p):
+        return None
+    try:
+        with open(p, encoding="utf-8") as f:
+            return json.load(f)
+    except (json.JSONDecodeError, OSError):
+        return None
+
+
+def _save_state(match_dir, state):
+    os.makedirs(os.path.join(match_dir, "raw"), exist_ok=True)
+    state = {k: v for k, v in state.items() if k != "updated"}
+    state["updated"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    with open(_state_path(match_dir), "w", encoding="utf-8") as f:
+        json.dump(state, f, ensure_ascii=False, indent=2)
+
+
+def _match_age_days(match_dir):
+    """Días desde el partido, leídos de raw/event.json. None si no se puede."""
+    ev_path = os.path.join(match_dir, "raw", "event.json")
+    if not os.path.exists(ev_path):
+        return None
+    try:
+        ev = json.load(open(ev_path, encoding="utf-8"))
+        ev = ev.get("event", ev)
+        ts = ev.get("startTimestamp")
+        if ts:
+            delta = datetime.now(timezone.utc) - datetime.fromtimestamp(ts, tz=timezone.utc)
+            return delta.days
+    except Exception:
+        pass
+    return None
+
+
+def _backfill_state(match_dir):
+    """Infiere el manifiesto para un partido bajado antes de que existiera.
+
+    'ok' si el raw/{ep}.json (o su CSV limpio) está en disco. Para los
+    endpoints de análisis que falten: 'empty' si el partido ya tiene más de
+    ANALYSIS_GRACE_DAYS (SofaScore no lo va a agregar), sin clave si es
+    reciente (se reintenta una vez). Guarda el manifiesto y lo devuelve;
+    None si no hay ni carpeta raw/.
+    """
+    raw_dir = os.path.join(match_dir, "raw")
+    if not os.path.isdir(raw_dir):
+        return None
+    state = {}
+    for ep in (*BASE_ENDPOINTS, *ANALYSIS_ENDPOINTS):
+        if (os.path.exists(os.path.join(raw_dir, f"{ep}.json"))
+                or os.path.exists(os.path.join(match_dir, CSV_NAMES[ep]))):
+            state[ep] = "ok"
+    age = _match_age_days(match_dir)
+    old_enough = age is not None and age > ANALYSIS_GRACE_DAYS
+    for ep in ANALYSIS_ENDPOINTS:
+        if ep not in state and old_enough:
+            state[ep] = "empty"
+    if (os.path.exists(os.path.join(match_dir, "player_heatmaps_clean.csv"))
+            or os.path.exists(os.path.join(raw_dir, "heatmaps.json"))):
+        state["heatmaps"] = "ok"
+    elif old_enough:
+        state["heatmaps"] = "empty"
+    if not state:
+        return None
+    _save_state(match_dir, state)
+    return state
+
+
 # ─── Pipeline por partido ────────────────────────────────────────────────────
 
 def fetch_match(client, match_key, match_url, base_dir=None,
-                include_heatmaps=True, max_heatmap_players=40):
+                include_heatmaps=True, max_heatmap_players=40,
+                retry_empty=False, force=False):
     """
-    Baja todos los endpoints de un partido, guarda raw JSON + clean CSV.
-    Devuelve dict {endpoint: bool} indicando qué se obtuvo.
+    Baja los endpoints de un partido que todavía falten, guarda raw JSON +
+    clean CSV y actualiza el manifiesto raw/_scrape_state.json.
+
+    Es incremental: un endpoint marcado "ok" (con su JSON en disco) no se
+    vuelve a pedir; uno marcado "empty" (SofaScore no lo publica) tampoco,
+    salvo retry_empty=True. force=True re-pide todo.
+
+    Devuelve dict {endpoint: bool} — True si hay datos (recién bajados o de disco).
     """
     if base_dir is None:
         base_dir = config.season_data_dir()
 
     mid = event_id_from_url(match_url)
     match_dir = os.path.join(base_dir, match_key)
-    os.makedirs(match_dir, exist_ok=True)
-    results = {}
+    os.makedirs(os.path.join(match_dir, "raw"), exist_ok=True)
 
+    state = _load_state(match_dir) or _backfill_state(match_dir) or {}
+    results = {}
     raw = {}
+
     for ep, tmpl in ENDPOINTS.items():
+        raw_file = os.path.join(match_dir, "raw", f"{ep}.json")
+        st = state.get(ep)
+        if not force and st == "ok" and os.path.exists(raw_file):
+            try:
+                raw[ep] = json.load(open(raw_file, encoding="utf-8"))
+            except (json.JSONDecodeError, OSError):
+                raw[ep] = None
+            results[ep] = raw[ep] is not None
+            continue
+        if not force and not retry_empty and st == "empty":
+            raw[ep] = None
+            results[ep] = False
+            continue
         data = client.get_json(tmpl.format(mid=mid))
         raw[ep] = data
         if data is not None:
             _save_raw(match_dir, ep, data)
+            state[ep] = "ok"
+        else:
+            state[ep] = "empty"
         results[ep] = data is not None
 
     home_name = away_name = None
@@ -577,7 +745,13 @@ def fetch_match(client, match_key, match_url, base_dir=None,
     _save_csv(match_dir, "momentum_clean.csv",          df_graph)
     _save_csv(match_dir, "best_players_clean.csv",      df_best)
 
-    if include_heatmaps and df_lineups is not None:
+    hm_state = state.get("heatmaps")
+    need_heatmaps = include_heatmaps and (
+        force or (retry_empty and hm_state != "ok") or hm_state not in ("ok", "empty")
+    )
+    if include_heatmaps and not need_heatmaps:
+        results["heatmaps"] = hm_state == "ok"
+    elif need_heatmaps and df_lineups is not None:
         hm_rows, hm_raw = [], {}
         mins = pd.to_numeric(df_lineups["minutes_played"], errors="coerce").fillna(0)
         played = df_lineups[mins > 0]
@@ -602,10 +776,12 @@ def fetch_match(client, match_key, match_url, base_dir=None,
             _save_raw(match_dir, "heatmaps", hm_raw)
         if hm_rows:
             _save_csv(match_dir, "player_heatmaps_clean.csv", pd.DataFrame(hm_rows))
-            results["heatmaps"] = True
-        else:
-            results["heatmaps"] = False
+        # Marcamos el bloque como resuelto SIEMPRE (haya o no filas): un partido
+        # sin heatmaps en SofaScore no se vuelve a pedir en cada corrida.
+        state["heatmaps"] = "ok" if hm_rows else "empty"
+        results["heatmaps"] = bool(hm_rows)
 
+    _save_state(match_dir, state)
     return results
 
 
@@ -665,41 +841,115 @@ def build_matches_index(match_keys=None, base_dir=None, out=None):
     return df
 
 
-def _match_done(match_dir):
-    needed = ["event_clean.csv", "statistics_clean.csv",
-              "lineups_clean.csv", "incidents_clean.csv", "shotmap_clean.csv"]
-    return all(os.path.exists(os.path.join(match_dir, f)) for f in needed)
+def _match_done(match_dir, want_heatmaps=True, retry_empty=False):
+    """True si ya se le pidió a SofaScore todo lo que este partido puede tener.
+
+    - Los 3 endpoints base (event/lineups/incidents) tienen que estar "ok".
+    - Cada endpoint de análisis tiene que estar resuelto: "ok" o "empty"
+      (SofaScore no lo publica para este partido).
+    - Si want_heatmaps, los heatmaps también tienen que estar resueltos.
+
+    retry_empty=True lo vuelve estricto (exige "ok" en todo) — sirve para
+    forzar un reintento de los que quedaron "empty", ej. si SofaScore cargó
+    el shotmap tarde.
+
+    Partidos viejos sin manifiesto se resuelven con _backfill_state().
+    """
+    state = _load_state(match_dir)
+    if state is None:
+        state = _backfill_state(match_dir)
+    if not state:
+        return False
+    terminal = ("ok",) if retry_empty else ("ok", "empty")
+    if any(state.get(ep) != "ok" for ep in BASE_ENDPOINTS):
+        return False
+    if any(state.get(ep) not in terminal for ep in ANALYSIS_ENDPOINTS):
+        return False
+    if want_heatmaps and state.get("heatmaps") not in terminal:
+        return False
+    # event_clean.csv y lineups_clean.csv tienen que estar en disco: si el raw
+    # se bajó pero el parseo nunca se escribió (scraper viejo), lo tratamos como
+    # pendiente para que fetch_match regenere los CSV desde el raw (sin red).
+    # incidents se omite adrede: un partido puede tener incidents_clean.csv
+    # vacío de forma legítima.
+    if not os.path.exists(os.path.join(match_dir, CSV_NAMES["event"])):
+        return False
+    if not os.path.exists(os.path.join(match_dir, CSV_NAMES["lineups"])):
+        return False
+    return True
+
+
+def _scrape_one(client, match_key, mid_or_url, base_dir, *, include_heatmaps=True,
+                retry_empty=False, force=False, label=""):
+    """Baja un partido si hace falta. Devuelve "done" | "scraped" | "error".
+
+    Único lugar con la lógica de saltear-si-está / imprimir lo que falta —
+    lo usan run_all (Chaco), scrape_rival_recent (rivales) y lpf_scraper.
+    """
+    match_dir = os.path.join(base_dir, match_key)
+    if not force and _match_done(match_dir, want_heatmaps=include_heatmaps,
+                                 retry_empty=retry_empty):
+        print(f"  {label}ya está: {match_key}")
+        return "done"
+    s = str(mid_or_url)
+    url = s if ("#id:" in s or "://" in s) else f"#id:{s}"
+    print(f"  {label}{match_key}")
+    try:
+        res = fetch_match(client, match_key, url, base_dir=base_dir,
+                          include_heatmaps=include_heatmaps,
+                          retry_empty=retry_empty, force=force)
+        missing = [ep for ep, ok in res.items() if not ok]
+        if missing:
+            print(f"      sin datos en SofaScore: {', '.join(missing)}")
+        return "scraped"
+    except Exception as e:
+        print(f"      ERROR: {e}")
+        return "error"
+
+
+def _scrape_series(client, items, base_dir, *, include_heatmaps=True,
+                   retry_empty=False, force=False, label_fmt="[{i}/{n}] "):
+    """items: iterable de (match_key, mid_or_url). Loop con pausa
+    config.MIN_DELAY-MAX_DELAY entre partidos SOLO cuando hubo trabajo de red
+    (los que ya estaban se saltean sin pausa). Devuelve {done, scraped, error}.
+    """
+    items = list(items)
+    stats = {"done": 0, "scraped": 0, "error": 0}
+    for i, (mk, mid_or_url) in enumerate(items, 1):
+        outcome = _scrape_one(
+            client, mk, mid_or_url, base_dir,
+            include_heatmaps=include_heatmaps, retry_empty=retry_empty,
+            force=force, label=label_fmt.format(i=i, n=len(items)),
+        )
+        stats[outcome] += 1
+        if outcome != "done" and i < len(items):
+            time.sleep(random.uniform(config.MIN_DELAY, config.MAX_DELAY))
+    return stats
 
 
 def run_all(match_urls, season=None, skip_existing=True, headless=True,
-            include_heatmaps=True, rebuild_index=True):
+            include_heatmaps=True, rebuild_index=True, retry_empty=False):
     """
-    Baja todos los partidos del dict {match_key: url}.
-    skip_existing=True saltea los que ya tienen los archivos clave.
+    Baja todos los partidos del dict {match_key: url} (Chaco).
+    Incremental: los partidos ya resueltos se saltean sin llamadas de red.
+    skip_existing=False fuerza re-bajar todo. retry_empty=True reintenta los
+    endpoints que SofaScore no había publicado.
     """
     base_dir = config.season_data_dir(season)
     client = SofascoreClient(headless=headless)
     print(f"Backend: {client.backend} | Temporada: {season or config.CURRENT_SEASON}\n")
     try:
-        for match_key, match_url in match_urls.items():
-            match_dir = os.path.join(base_dir, match_key)
-            if skip_existing and _match_done(match_dir):
-                print(f"-- Saltando (ya existe): {match_key}")
-                continue
-            print(f"\n== {match_key} ==  (id {event_id_from_url(match_url)})")
-            try:
-                res = fetch_match(client, match_key, match_url, base_dir,
-                                  include_heatmaps=include_heatmaps)
-                for ep, ok in res.items():
-                    print(f"   {ep:<18}: {'OK' if ok else 'sin datos'}")
-            except Exception as e:
-                print(f"   ERROR: {e}")
-            time.sleep(random.uniform(config.MIN_DELAY, config.MAX_DELAY))
+        stats = _scrape_series(
+            client, match_urls.items(), base_dir,
+            include_heatmaps=include_heatmaps, retry_empty=retry_empty,
+            force=not skip_existing, label_fmt="",
+        )
     finally:
         client.close()
     if rebuild_index:
         build_matches_index(list(match_urls.keys()), base_dir)
-    print("\nScraping completado.")
+    print(f"\nScraping completado: {stats['scraped']} bajados, "
+          f"{stats['done']} ya estaban, {stats['error']} con error.")
 
 
 if __name__ == "__main__":

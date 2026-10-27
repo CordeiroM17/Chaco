@@ -13,6 +13,8 @@ Uso:
 import os
 import pandas as pd
 
+import config
+
 _PREAMBLE = r"""\documentclass[11pt, a4paper]{article}
 \usepackage[a4paper, top=2.5cm, bottom=2.5cm, left=2cm, right=2cm]{geometry}
 \usepackage[T1]{fontenc}
@@ -212,4 +214,152 @@ def build_team_report_tex(res, destinatario=None):
     out.append(r"\slot{recomendaciones concretas para el cuerpo técnico}" + "\n\n")
 
     out.append(r"\end{document}" + "\n")
+    return "".join(out)
+
+
+# ─── Sección: Proyección Monte Carlo de la tabla (Fase 1, Zona A) ────────────
+# Ver PLAN_montecarlo_tabla.md y src/analysis/simulation.py. Pensada para
+# insertarse en un documento que ya cargue el preámbulo de este módulo (mismos
+# macros \databox / \slot / colores). Objetividad primero: probabilidades y
+# tabla de datos antes que cualquier interpretación, que queda en un \slot.
+
+_PROJECTION_FIGS = ("posicion_probabilidad.png", "distribucion_puntos.png", "proyeccion_zona.png")
+
+
+def build_projection_section_tex(sims, proj_df, team_name="Chaco For Ever",
+                                 section_num="7", graphics=None, graphics_prefix="",
+                                 season=None):
+    """
+    Arma el fragmento LaTeX de la sección de proyección de tabla para
+    `team_name`, a partir de:
+      - sims: dict que devuelve simulation.simulate_season()
+      - proj_df: DataFrame de simulation.promotion_relegation_probabilities()
+      - graphics: nombres de PNG realmente generados (ej. las claves de
+        `res['graphics']` que devuelve liga.generate_projection_graphics()).
+        Si es None, asume que los 3 gráficos estándar existen.
+      - season: para buscar la posición ACTUAL de `team_name` en
+        `standings.csv` y mostrarla junto a la proyectada — sin esto, el
+        lector puede confundir "posición proyectada" (orden final esperado
+        a fin de temporada) con la posición de hoy, que suele ser distinta
+        porque el modelo reparte los partidos restantes según el nivel
+        reciente de cada equipo, no según la tabla actual.
+    """
+    graphics = set(graphics) if graphics is not None else set(_PROJECTION_FIGS)
+    row = proj_df[proj_df["team_name"] == team_name]
+    if row.empty:
+        raise ValueError(f"'{team_name}' no está en proj_df — revisar el nombre exacto.")
+    row = row.iloc[0]
+    n_sims = sims["n_sims"]
+    n_remaining = sims["n_remaining"]
+    n_teams = len(sims["team_ids"])
+
+    actual_txt = ""
+    try:
+        from src.scraping.standings_scraper import load_standings
+        st = load_standings(season or config.CURRENT_SEASON)
+        st_row = st[st["team_name"] == team_name]
+        if not st_row.empty:
+            st_row = st_row.iloc[0]
+            deg_ = r"$^\circ$"
+            actual_txt = (f"Hoy está \\textbf{{{int(st_row['position'])}{deg_}}} "
+                          f"con {int(st_row['points'])} pts en "
+                          f"{int(st_row['matches_played'])} PJ. ")
+    except Exception:
+        pass
+
+    p_desc = row["prob_descenso"] * 100
+    p_red  = row["prob_reducido_por_posicion"] * 100
+    p_1ro  = row["prob_puntero_zona_a"] * 100
+    pos_media = row["posicion_media"]
+    pos_mediana = int(row["posicion_mediana"])
+
+    # Resaltado \mR (riesgo) / \mG (positivo) / \mA (neutro/clave), igual que
+    # el resto de los informes del repo.
+    desc_mark = r"\mR" if p_desc >= 15 else (r"\mA" if p_desc >= 5 else None)
+    desc_txt = f"{desc_mark}{{{p_desc:.0f}\\%}}" if desc_mark else f"{p_desc:.0f}\\%"
+
+    n_sims_es = f"{n_sims:,}".replace(",", ".")  # separador de miles en formato es-AR
+
+    out = []
+    # OJO: — (em dash) en modo texto también rompe con este preámbulo
+    # (mismo bug de fuente que el de °, línea de abajo) — se usa " - " como
+    # ya hace el resto de los informes del repo (ej. "9V - 8E - 4D").
+    half_life = sims.get("half_life")
+    es_dc = sims.get("model") == "dc"
+    if es_dc:
+        pct_xg = (sims.get("w_xg") or 0) * 100
+        ajuste_txt = (
+            "por máxima verosimilitud sobre los resultados de las dos zonas, "
+            "corrigiendo cada partido por la calidad del rival y midiendo el "
+            f"rendimiento sobre todo por xG ({pct_xg:.0f}\\%) más que por el "
+            "gol convertido, que es lo que mejor predice fuera de muestra")
+    else:
+        ajuste_txt = (
+            f"pesando los últimos partidos más que los de principios de "
+            f"temporada (recencia con vida media de {half_life} partidos, para "
+            f"que una racha reciente mueva la proyección)"
+            if half_life else
+            "con el promedio plano de resultados y xG de toda la temporada")
+    out.append(f"\\section*{{{section_num}. Proyección de la Tabla - Zona A}}\n")
+    out.append(
+        f"Simulación Monte Carlo ({n_sims_es} temporadas simuladas, "
+        f"{n_remaining} partidos restantes de Zona A) sobre "
+        + ("un modelo Dixon-Coles de ataque/defensa ajustado "
+           if es_dc else "un modelo de ataque/defensa tipo Poisson ajustado ")
+        + f"{ajuste_txt}. "
+        f"\\textbf{{Alcance:}} esto cubre solo la Zona A "
+        f"({n_teams} equipos) - no incluye el ascenso directo (final vs. "
+        f"Zona B) ni el ganador del Torneo Reducido, que dependen de datos "
+        f"de la Zona B que hoy no están cargados (ver "
+        f"\\texttt{{PLAN\\_montecarlo\\_tabla.md}}, Fase 2).\n\n")
+    # OJO: ° en modo texto se rompe con este preámbulo (babel es-tabla + T1 +
+    # lmodern renderiza "3°" como "3ř" — bug preexistente del repo, confirmado
+    # también en informes ya compilados como Informe_pre_partido_colon.pdf).
+    # Se usa el símbolo de grado en modo matemático ($^\circ$), que no depende
+    # de esa fuente y renderiza bien.
+    deg = r"$^\circ$"
+    out.append(
+        r"\databox{Proyección de " + _tex_escape(team_name) + "}{"
+        + actual_txt +
+        f"Posición final esperada: \\textbf{{{pos_media:.1f}{deg}}} (mediana {pos_mediana}{deg}). "
+        f"Probabilidad de descenso (17{deg}-18{deg}): {desc_txt}. "
+        f"Probabilidad de entrar al Reducido por posición (2{deg}-8{deg}): {p_red:.0f}\\%. "
+        f"Probabilidad de terminar 1{deg} de zona (llegar a la final): {p_1ro:.0f}\\%."
+        + "}\n\n")
+
+    def _proj_fig(fname, caption, width):
+        if fname not in graphics:
+            return ""
+        return _fig({graphics_prefix + fname}, graphics_prefix + fname, caption, width)
+
+    out.append(_proj_fig("posicion_probabilidad.png",
+                         "Probabilidad de cada posición final de Zona A, por equipo.", 0.98))
+    out.append(_proj_fig("distribucion_puntos.png",
+                         f"Distribución de puntos finales simulados para {_tex_escape(team_name)}.", 0.85))
+    out.append(_proj_fig("proyeccion_zona.png",
+                         "Probabilidad de terminar en cada zona de la tabla (Reducido / mitad de tabla / descenso), por equipo.", 0.98))
+
+    if es_dc:
+        recencia_nota = (
+            " Los hiperparámetros se eligieron por backtesting (cortar el "
+            "campeonato en una fecha pasada, proyectar desde ahí y medir "
+            "contra lo que después pasó), no a criterio. El modelo pesa igual "
+            "todos los partidos de la temporada: en esa validación, castigar "
+            "los partidos viejos para seguir las rachas no mejoró el "
+            "pronóstico. Por eso la proyección puede diferir de la impresión "
+            "que deja el último mes.")
+    else:
+        recencia_nota = (
+            " Al pesar los últimos partidos, un equipo que viene de una racha "
+            "puede proyectar bastante mejor (o peor) que su posición de hoy - "
+            "eso es lo esperado del método, no un error, pero conviene mirarlo "
+            "junto al promedio plano de toda la temporada para no sobreactuar "
+            "una racha corta."
+            if half_life else "")
+    out.append(
+        "\\textit{\\small Nota metodológica: modelo ajustado sobre "
+        f"{sims['strengths']['pj'].min():.0f}-{sims['strengths']['pj'].max():.0f} "
+        "partidos por equipo - confianza media/alta en la posición relativa, "
+        "baja en el resultado exacto de un partido individual." + recencia_nota + "}\n\n")
+    out.append(r"\slot{lectura de la proyección: qué significa para el objetivo de la temporada}" + "\n\n")
     return "".join(out)

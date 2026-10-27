@@ -239,9 +239,34 @@ def generate_team_graphics(slug, season="2026", plots_dir=None, verbose=True):
 
 
 # ─────────────────────────── estadísticas globales ──────────────────────────
+def _extras_de_remates(mks, base_dir):
+    """npxG, xGOT, remates de cabeza / pelota parada, palos, penales y km del
+    equipo, a favor y en contra. Promedios por partido sobre los partidos con
+    shotmap; palos y penales como total de la temporada."""
+    pr = PM.team_two_way_profile(mks, base_dir)
+    n = pr.get("n_shotmap") or 0
+
+    def total(k):
+        return int(round(pr.get(k, 0) * n))
+
+    return {
+        "npxgf_pp": pr.get("npxg_for"), "npxgc_pp": pr.get("npxg_against"),
+        "xgotf_pp": pr.get("xgot_for"), "xgotc_pp": pr.get("xgot_against"),
+        "cabeza_f_pp": pr.get("headers_for"), "cabeza_c_pp": pr.get("headers_against"),
+        "pelota_parada_f_pp": pr.get("setpiece_shots_for"),
+        "pelota_parada_c_pp": pr.get("setpiece_shots_against"),
+        "palos_f": total("woodwork_for"), "palos_c": total("woodwork_against"),
+        "penales_f": total("penalties_for"), "penales_c": total("penalties_against"),
+        "penales_convertidos": total("penalties_scored_for"),
+        "km_pp": pr.get("km_for"), "partidos_con_km": pr.get("n_tracking", 0),
+    }
+
+
 def team_summary_table(season="2026"):
     """Una fila por equipo del grupo: PJ, V/E/D, pts, GF/GC, xG a favor/contra
-    y promedios por partido. Base para rankings ofensivo y defensivo."""
+    y promedios por partido, más npxG, xGOT, remates de cabeza y de pelota
+    parada, palos, penales y km (ver `_extras_de_remates`). Base para rankings
+    ofensivo y defensivo."""
     rows = []
     for slug in config.group_a_teams(season):
         base_dir, mks, name = team_context(slug, season)
@@ -260,15 +285,32 @@ def team_summary_table(season="2026"):
             "gc_pp": round((st.get("goles_contra") or 0) / pj, 2) if pj else None,
             "xgf_pp": round((st.get("xg_favor") or 0) / pj, 2) if pj else None,
             "xgc_pp": round((st.get("xg_contra") or 0) / pj, 2) if pj else None,
+            **_extras_de_remates(mks, base_dir),
         })
     df = pd.DataFrame(rows)
     return df.sort_values("pts", ascending=False).reset_index(drop=True) if not df.empty else df
 
 
+def _zona_a_ids(season="2026"):
+    """IDs de los 18 equipos de la tabla de la Zona A. group_a_teams() suma al
+    rival interzonal (Gimnasia de Jujuy), cuya carpeta trae sus partidos contra
+    la Zona B: sin este filtro esos partidos se colaban en la fecha."""
+    p = config._STANDINGS_FILE.format(season=season)
+    if os.path.exists(p):
+        try:
+            return set(pd.read_csv(p)["team_id"].astype(int))
+        except Exception:
+            pass
+    return {int(v["id"]) for v in config.group_a_teams(season).values()}
+
+
 def round_matches(round_num, season="2026"):
     """Partidos ÚNICOS de una fecha/ronda en todo el grupo (deduplicados por
     event_id, ya que cada partido aparece en la carpeta de los dos equipos).
+    Solo cuenta partidos con al menos un equipo de la Zona A (así entra el
+    interzonal de un equipo de la zona, pero no Gimnasia vs un rival de la B).
     Devuelve DataFrame con datos del partido + la ruta a una carpeta con datos."""
+    zona_ids = _zona_a_ids(season)
     seen = {}
     for slug in config.group_a_teams(season):
         base_dir = (config.season_data_dir(season)
@@ -288,6 +330,12 @@ def round_matches(round_num, season="2026"):
             eid = e.get("event_id")
             if eid in seen:
                 continue
+            try:
+                ids = {int(float(e["home_team_id"])), int(float(e["away_team_id"]))}
+            except (KeyError, TypeError, ValueError):
+                ids = None
+            if ids is not None and not (ids & zona_ids):
+                continue
             seen[eid] = {
                 "event_id": eid, "match_dir": os.path.join(base_dir, mk),
                 "home_team": e.get("home_team"), "away_team": e.get("away_team"),
@@ -299,10 +347,44 @@ def round_matches(round_num, season="2026"):
 
 _POS_BUCKET = {"G": "G", "D": "D", "M": "M", "F": "F"}
 
+# Etiqueta corta del rol fino para las placas del mejor 11 (el nombre completo
+# de scouting.ROL_NOMBRE es muy largo para convivir con el equipo en una sola
+# línea chica).
+_ROL_CORTO = {
+    "ARQ": "Arquero", "DFC": "Central", "LAT": "Lateral",
+    "MCD": "Doble 5", "MC": "Volante", "EXT_MP": "Extremo", "DC": "Delantero",
+}
+
+
+def _avg_positions_del_partido(match_dir):
+    """{(team_side, player_name): (avg_x, avg_y)} de average_positions_clean.csv
+    de un partido. Solo existe para quien arrancó de titular (ver
+    src/analysis/scouting.py:_posiciones_medias, misma fuente)."""
+    path = os.path.join(match_dir, "average_positions_clean.csv")
+    if not os.path.exists(path):
+        return {}
+    try:
+        ap = pd.read_csv(path)
+    except Exception:
+        return {}
+    out = {}
+    for _, r in ap.iterrows():
+        x = pd.to_numeric(r.get("average_x"), errors="coerce")
+        y = pd.to_numeric(r.get("average_y"), errors="coerce")
+        if pd.notna(x) and pd.notna(y):
+            out[(r.get("team_side"), r.get("player_name"))] = (float(x), float(y))
+    return out
+
 
 def round_player_ratings(round_num, season="2026"):
     """Todos los jugadores (ambos equipos) de la fecha con su rating, posición,
-    equipo y si fue titular o suplente."""
+    equipo y si fue titular o suplente. También el rol fino de ESE partido
+    (ARQ/DFC/LAT/MCD/MC/EXT_MP/DC) y la banda (IZQ/DER), con el mismo criterio
+    que usa el pool de scouting de la liga (src/analysis/scouting.py:
+    asignar_rol/asignar_banda) pero aplicado a la posición media de ese único
+    partido en vez de la mediana de varios — solo existe para quien tiene
+    average_positions cargado (titulares)."""
+    from src.analysis.scouting import asignar_rol, asignar_banda, ROL_NOMBRE
     rm = round_matches(round_num, season)
     rows = []
     for _, m in rm.iterrows():
@@ -310,15 +392,25 @@ def round_player_ratings(round_num, season="2026"):
         if not os.path.exists(lp):
             continue
         lin = pd.read_csv(lp)
+        medias = _avg_positions_del_partido(m["match_dir"])
         for _, p in lin.iterrows():
             team = m["home_team"] if p.get("team_side") == "home" else m["away_team"]
             is_sub = not bool(p.get("is_starter"))
+            pos_raw = str(p.get("position"))
+            avg_x, avg_y = medias.get((p.get("team_side"), p.get("player_name")),
+                                      (np.nan, np.nan))
+            amplitud = abs(avg_y - 50) if pd.notna(avg_y) else np.nan
+            rol = asignar_rol(pos_raw, avg_x, amplitud)
+            pct_izq = (100.0 if avg_y > 50 else 0.0) if pd.notna(avg_y) else np.nan
+            banda = asignar_banda(pct_izq, rol)
             rows.append({
                 "player": p.get("player_name"), "team": team,
-                "position": _POS_BUCKET.get(str(p.get("position")), None),
+                "position": _POS_BUCKET.get(pos_raw, None),
                 "rating": p.get("rating"), "is_sub": is_sub,
                 "minutes": p.get("minutes_played"),
                 "event_id": m["event_id"],
+                "rol": rol, "rol_nombre": ROL_NOMBRE.get(rol, ""),
+                "rol_corto": _ROL_CORTO.get(rol, ""), "banda": banda,
             })
     df = pd.DataFrame(rows)
     return df.dropna(subset=["rating", "position"]) if not df.empty else df
@@ -393,6 +485,88 @@ def _shot_zone(x, y):
     zona = "area" if in_box else "fuera"
     lado = "centro" if central else "lateral"
     return f"{zona}_{lado}"
+
+
+def generate_projection_graphics(season="2026", n_sims=20000, seed=None,
+                                 highlight="Chaco For Ever", plots_dir=None,
+                                 model="dc", xi=None, w_xg=None,
+                                 half_life=None, verbose=True):
+    """Corre la simulación Monte Carlo de la tabla (Fase 1, Zona A — ver
+    PLAN_montecarlo_tabla.md y src/analysis/simulation.py) y genera los 3
+    gráficos de la proyección. Devuelve dict con las tablas + rutas de los
+    PNG, para usar en un notebook o enganchar en el informe.
+
+    `model`: "dc" (Dixon-Coles ajustado por máxima verosimilitud, default) o
+    "legacy" (el modelo anterior de promedios normalizados). `xi` y `w_xg`
+    son los hiperparámetros del ajuste; sus defaults salen del backtesting
+    (`config.DC_XI` / `config.DC_W_XG`). `half_life` solo aplica a "legacy"."""
+    from src.analysis import simulation as SIM
+    from src.visualization.liga import (
+        plot_position_heatmap, plot_points_distribution, plot_promotion_relegation_bars,
+    )
+
+    plots_dir = plots_dir or config.group_projection_dir(season)
+    os.makedirs(plots_dir, exist_ok=True)
+
+    sims = SIM.simulate_season(season=season, n_sims=n_sims, seed=seed,
+                               model=model, xi=xi, w_xg=w_xg, half_life=half_life)
+    pos_probs = SIM.position_probabilities(sims)
+    proj = SIM.promotion_relegation_probabilities(sims)
+
+    # Orden de la tabla ACTUAL (standings.csv), no la posición media
+    # proyectada: así el lector encuentra cada equipo donde está hoy en los
+    # gráficos, y ve al lado cómo lo mueve la proyección — pedido explícito
+    # tras confundirse con el orden proyectado (ver memoria del proyecto).
+    from src.scraping.standings_scraper import load_standings
+    st = load_standings(season)
+    current_order = st.sort_values("position")["team_name"].tolist()
+
+    made = {}
+
+    def _p(fname):
+        return os.path.join(plots_dir, fname)
+
+    p = _p("posicion_probabilidad.png")
+    plot_position_heatmap(pos_probs, highlight=highlight, n_sims=n_sims, save_path=p,
+                          order=current_order)
+    made["posicion_probabilidad.png"] = p
+
+    hi_id = next(tid for tid in sims["team_ids"] if sims["team_names"][tid] == highlight)
+    hi_idx = sims["team_ids"].index(hi_id)
+    final_pts_hi = sims["final_points"][:, hi_idx]
+    from src.scraping.fixture_scraper import remaining_fixture_zona_a
+    row = st.loc[st["team_name"] == highlight].iloc[0]
+    current_pts, current_pj = float(row["points"]), float(row["matches_played"])
+    rem = remaining_fixture_zona_a(season)
+    n_remaining_hi = int(((rem["home_team_id"] == hi_id) | (rem["away_team_id"] == hi_id)).sum())
+    total_games = current_pj + n_remaining_hi
+    pace_pts = current_pts / current_pj * total_games if current_pj else current_pts
+    p = _p("distribucion_puntos.png")
+    plot_points_distribution(final_pts_hi, pace_pts, team_name=highlight, save_path=p)
+    made["distribucion_puntos.png"] = p
+
+    p = _p("proyeccion_zona.png")
+    plot_promotion_relegation_bars(proj, highlight=highlight, save_path=p, order=current_order)
+    made["proyeccion_zona.png"] = p
+
+    if verbose:
+        if sims["model"] == "dc":
+            print(f"Modelo: Dixon-Coles (xi={sims['xi']}, w_xg={sims['w_xg']}, "
+                  f"rho={sims['rho']:+.3f}, gamma={sims['gamma']:.3f})")
+        else:
+            hl_desc = f"ponderado (half_life={half_life})" if half_life else "plano (sin ponderar)"
+            print(f"Modelo: viejo, {hl_desc}")
+        row = proj[proj["team_name"] == highlight].iloc[0]
+        print(f"{highlight}: posición media {row['posicion_media']:.1f}° "
+              f"(mediana {int(row['posicion_mediana'])}°) | "
+              f"descenso {row['prob_descenso']*100:.0f}% | "
+              f"reducido por posición {row['prob_reducido_por_posicion']*100:.0f}% | "
+              f"1° de zona {row['prob_puntero_zona_a']*100:.0f}%")
+        for f in made:
+            print(f"  ✔ {f}")
+
+    return {"sims": sims, "pos_probs": pos_probs, "proj": proj,
+            "graphics": made, "plots_dir": plots_dir}
 
 
 def shot_origin_distribution(season="2026", by_team=False, round_num=None):

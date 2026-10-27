@@ -18,7 +18,7 @@ import config
 from src.scraping.chaco_scraper import SofascoreClient
 
 
-def fetch_standings(season=None, headless=True):
+def fetch_standings(season=None, headless=False):
     """
     Baja la tabla de posiciones de Primera Nacional para la temporada dada.
     Guarda el CSV y devuelve el DataFrame.
@@ -53,27 +53,7 @@ def fetch_standings(season=None, headless=True):
         print("❌ Respuesta sin standings.")
         return None
 
-    rows_raw = standings[0].get("rows", [])
-    rows = []
-    for r in rows_raw:
-        team = r.get("team", {}) or {}
-        gf = r.get("scoresFor", 0) or 0
-        ga = r.get("scoresAgainst", 0) or 0
-        rows.append({
-            "position":       r.get("position"),
-            "team_id":        team.get("id"),
-            "team_name":      team.get("name"),
-            "team_slug":      team.get("slug"),
-            "matches_played": r.get("matches"),
-            "wins":           r.get("wins"),
-            "draws":          r.get("draws"),
-            "losses":         r.get("losses"),
-            "goals_for":      gf,
-            "goals_against":  ga,
-            "goal_diff":      gf - ga,
-            "points":         r.get("points"),
-        })
-
+    rows = _rows_from_group(standings[0])
     df = pd.DataFrame(rows).sort_values("position").reset_index(drop=True)
 
     out_path = config.standings_file(season)
@@ -95,6 +75,78 @@ def fetch_standings(season=None, headless=True):
 def load_standings(season=None):
     """Carga standings desde CSV local (sin hacer scraping)."""
     path = config.standings_file(season)
+    if not os.path.exists(path):
+        return None
+    return pd.read_csv(path)
+
+
+def _rows_from_group(group):
+    rows = []
+    for r in group.get("rows", []):
+        team = r.get("team", {}) or {}
+        gf = r.get("scoresFor", 0) or 0
+        ga = r.get("scoresAgainst", 0) or 0
+        rows.append({
+            "position":       r.get("position"),
+            "team_id":        team.get("id"),
+            "team_name":      team.get("name"),
+            "team_slug":      team.get("slug"),
+            "matches_played": r.get("matches"),
+            "wins":           r.get("wins"),
+            "draws":          r.get("draws"),
+            "losses":         r.get("losses"),
+            "goals_for":      gf,
+            "goals_against":  ga,
+            "goal_diff":      gf - ga,
+            "points":         r.get("points"),
+        })
+    return rows
+
+
+def fetch_standings_zona_b(season=None, headless=True):
+    """
+    Baja la tabla de posiciones de la Zona B de Primera Nacional. Mismo
+    endpoint que fetch_standings (un solo request trae las dos zonas), pero
+    se queda con standings[1] en vez de standings[0].
+
+    Guarda en config.standings_zona_b_file() y devuelve el DataFrame.
+    """
+    season = season or config.CURRENT_SEASON
+    season_id = config.SEASON_IDS.get(season)
+    if not season_id:
+        print(f"⚠️  No hay season_id configurado para temporada '{season}'.")
+        return None
+
+    path = (f"api/v1/unique-tournament/{config.UNIQUE_TOURNAMENT_ID}"
+            f"/season/{season_id}/standings/total")
+
+    print(f"Descargando tabla de posiciones Zona B {season}...")
+
+    with SofascoreClient(headless=headless) as client:
+        data = client.get_json(path)
+
+    if not data:
+        print("❌ No se pudo obtener la tabla de posiciones.")
+        return None
+
+    standings = data.get("standings", [])
+    if len(standings) < 2:
+        print("❌ La respuesta no trae una segunda zona (standings[1]).")
+        return None
+
+    rows = _rows_from_group(standings[1])
+    df = pd.DataFrame(rows).sort_values("position").reset_index(drop=True)
+
+    out_path = config.standings_zona_b_file(season)
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    df.to_csv(out_path, index=False, encoding="utf-8")
+    print(f"✅ Tabla guardada: {out_path}  ({len(df)} equipos)")
+    return df
+
+
+def load_standings_zona_b(season=None):
+    """Carga standings de Zona B desde CSV local (sin hacer scraping)."""
+    path = config.standings_zona_b_file(season)
     if not os.path.exists(path):
         return None
     return pd.read_csv(path)

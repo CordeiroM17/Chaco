@@ -27,8 +27,29 @@ def _fmt_val(v):
     return f"{v:.0f}" if abs(v - round(v)) < 1e-9 else f"{v:.2f}"
 
 
+def _sample_tier(minutes):
+    """
+    Clasifica el tamaño de muestra por minutos jugados. Devuelve
+    (etiqueta, color_texto, color_fondo).
+
+    Existe para poder hacerle pizza a TODOS los jugadores sin que se lea mal:
+    en vez de esconder al que jugó poco, se le pone el cartel de cuánta muestra
+    hay detrás de esos percentiles.
+    """
+    if minutes is None:
+        return ("", TEXT_COLOR, "#ecece4")
+    if minutes >= 900:
+        return ("muestra amplia", "#1d6b3f", "#dff0e4")
+    if minutes >= 450:
+        return ("muestra media", "#8a6100", "#fbeecd")
+    if minutes >= 180:
+        return ("MUESTRA CHICA – leer con cuidado", "#9c4a12", "#fbe0cb")
+    return ("MUESTRA MUY CHICA – no concluyente", "#96201f", "#f7d4d3")
+
+
 def plot_player_pizza(player_name, percentiles, team_label="Chaco For Ever",
-                      context_label="", save_path=None):
+                      context_label="", minutes=None, matches=None,
+                      sample_note="", save_path=None):
     """
     Pizza de percentiles del jugador (de analysis.players.player_percentiles).
 
@@ -36,6 +57,15 @@ def plot_player_pizza(player_name, percentiles, team_label="Chaco For Ever",
     frente al resto de la liga, NO el valor bruto. Ej.: 92 en Goles = mejor que
     el 92% de los jugadores en goles por 90', no "92 goles". El valor real por
     90 minutos va entre paréntesis en la etiqueta de cada gajo.
+
+    `minutes` y `matches`: si se pasan, se dibuja arriba un cartel con los
+    minutos jugados, los partidos y qué tan confiable es la muestra (ver
+    _sample_tier). Con eso se le puede generar pizza a todo el plantel —
+    incluidos los refuerzos y los suplentes — sin que un percentil alto sacado
+    de 90 minutos se lea igual que uno de una temporada entera.
+
+    `sample_note`: línea extra debajo del cartel (p.ej. "debutó el 07/07 —
+    95% de los minutos disponibles desde entonces").
 
     percentiles: dict {grupo: [(etiqueta, percentil, valor_p90), ...]}
     """
@@ -77,21 +107,58 @@ def plot_player_pizza(player_name, percentiles, team_label="Chaco For Ever",
                            bbox=dict(edgecolor="white", boxstyle="round,pad=0.2", lw=1)),
     )
 
-    fig.text(0.5, 0.975, player_name, size=17, ha="center",
+    # Encabezado apilado de arriba hacia abajo. Se lleva la cuenta de la altura
+    # consumida para después bajar el eje polar y que nada se superponga con
+    # las etiquetas del pizza (el bloque crece o se achica según haya cartel de
+    # muestra y nota al pie).
+    y = 0.980
+    fig.text(0.5, y, player_name, size=17, ha="center",
              color=TEXT_COLOR, fontweight="bold")
+    y -= 0.026
+
     team_line = f"{team_label}"
     if context_label:
         team_line += f"  ·  {context_label}"
-    fig.text(0.5, 0.952, team_line, size=10, ha="center",
+    fig.text(0.5, y, team_line, size=10, ha="center",
              color=TEXT_COLOR, fontweight="bold")
+    y -= 0.028
+
+    # Cartel de muestra: minutos y partidos SIEMPRE visibles, con el aviso de
+    # qué tan sólido es lo que se está leyendo. Es lo que permite graficar a
+    # todo el plantel sin filtrar por minutos.
+    if minutes is not None:
+        tier, tier_fg, tier_bg = _sample_tier(minutes)
+        partes = [f"{minutes:,.0f}′ jugados".replace(",", ".")]
+        if matches is not None:
+            partes.append(f"{int(matches)} partido{'s' if int(matches) != 1 else ''}")
+        if tier:
+            partes.append(tier)
+        fig.text(0.5, y, "   ·   ".join(partes), size=10.5, ha="center",
+                 va="center", color=tier_fg, fontweight="bold",
+                 bbox=dict(facecolor=tier_bg, edgecolor=tier_fg, lw=1.1,
+                           boxstyle="round,pad=0.45"))
+        y -= 0.026
+    if sample_note:
+        fig.text(0.5, y, sample_note, size=8.5, ha="center",
+                 color=MUTED_COLOR, style="italic")
+        y -= 0.020
+
     # Aclaración clave: el número de cada gajo es un PERCENTIL, no el valor bruto.
-    fig.text(0.5, 0.928,
+    fig.text(0.5, y,
              "Cada número = percentil 0–100 vs jugadores de la Primera Nacional "
              "(100 = el mejor de la liga)",
              size=9, ha="center", color=TEXT_COLOR)
-    fig.text(0.5, 0.910,
+    y -= 0.019
+    fig.text(0.5, y,
              "Entre paréntesis, el valor real por 90 minutos",
              size=8.5, ha="center", color=MUTED_COLOR, style="italic")
+    y -= 0.014
+
+    # El eje polar arranca debajo del encabezado. El margen extra de 0.03 es
+    # porque mplsoccer dibuja las etiquetas de cada gajo POR FUERA del círculo,
+    # sobresaliendo del eje: sin ese aire, la etiqueta de arriba se pisa con la
+    # última línea del encabezado. El 0.045 de abajo es para la leyenda.
+    ax.set_position([0.10, 0.075, 0.80, max(0.5, y - 0.105)])
 
     # Leyenda de grupos
     x0 = 0.30

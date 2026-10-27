@@ -45,14 +45,20 @@ from src.scraping.chaco_scraper import (
     SofascoreClient,
     fetch_match,
     _match_done,
+    _scrape_series,
 )
 
 
-def get_rival_season_events(client, team_id, season_id, max_pages=8):
+def get_rival_season_events(client, team_id, season_id, max_pages=8, tournament_id=None):
     """
-    Devuelve TODOS los eventos finalizados de Primera Nacional del equipo en
-    la temporada `season_id`, en orden cronológico ASCENDENTE (más viejo
-    primero). Cada elemento es (event_id, event_dict).
+    Devuelve TODOS los eventos finalizados del equipo en la temporada
+    `season_id` de `tournament_id` (default: config.UNIQUE_TOURNAMENT_ID,
+    Primera Nacional), en orden cronológico ASCENDENTE (más viejo primero).
+    Cada elemento es (event_id, event_dict).
+
+    `tournament_id` parametrizable para reusar esta misma función con otro
+    torneo (ej. Liga Profesional, ver src/scraping/lpf_scraper.py) sin
+    duplicar la lógica de paginación/filtrado.
 
     El endpoint `events/last/{page}` devuelve eventos de TODAS las
     competiciones del equipo (reservas, copas, torneos regionales) y de
@@ -66,6 +72,7 @@ def get_rival_season_events(client, team_id, season_id, max_pages=8):
     evento nuevo de esa temporada (ya quedó atrás el arranque de temporada)
     o cuando se acaban las páginas (hasNextPage=False).
     """
+    tournament_id = tournament_id or config.UNIQUE_TOURNAMENT_ID
     seen_ids = set()
     collected = []
     misses = 0
@@ -80,7 +87,7 @@ def get_rival_season_events(client, team_id, season_id, max_pages=8):
             ut_id = ((ev.get("tournament", {}) or {}).get("uniqueTournament", {}) or {}).get("id")
             sid = (ev.get("season", {}) or {}).get("id")
             status_type = (ev.get("status", {}) or {}).get("type", "")
-            if ut_id != config.UNIQUE_TOURNAMENT_ID or sid != season_id or status_type != "finished":
+            if ut_id != tournament_id or sid != season_id or status_type != "finished":
                 continue
             if ev["id"] in seen_ids:
                 continue
@@ -97,11 +104,16 @@ def get_rival_season_events(client, team_id, season_id, max_pages=8):
     return [(ev["id"], ev) for ev in collected]
 
 
-def get_rival_recent_events(client, team_id, n=None, season_id=None):
+def get_rival_recent_events(client, team_id, n=None, season_id=None, tournament_id=None,
+                            max_pages=8):
     """
-    Eventos finalizados de Primera Nacional del equipo, en orden cronológico
-    ascendente. Si `n` es None, devuelve TODOS los de la temporada; si es un
-    entero, se queda con los ÚLTIMOS n (los más recientes).
+    Eventos finalizados del equipo, en orden cronológico ascendente. Si `n`
+    es None, devuelve TODOS los de la temporada; si es un entero, se queda
+    con los ÚLTIMOS n (los más recientes).
+
+    `max_pages` limita cuántas páginas del feed del equipo se recorren. Para
+    una corrida post-fecha alcanza con 2 (el partido nuevo siempre está en la
+    página 0-1); la corrida completa / backfill necesita el default.
 
     OJO histórico: antes esta función tomaba `filtered[:n]` — los PRIMEROS n
     de la lista ascendente, es decir los más VIEJOS de la temporada, no los
@@ -109,7 +121,8 @@ def get_rival_recent_events(client, team_id, n=None, season_id=None):
     siempre con los partidos de febrero-marzo, nunca los últimos jugados).
     """
     season_id = season_id or config.SEASON_IDS.get(config.CURRENT_SEASON)
-    events = get_rival_season_events(client, team_id, season_id)
+    events = get_rival_season_events(client, team_id, season_id,
+                                     tournament_id=tournament_id, max_pages=max_pages)
     return events[-n:] if n else events
 
 
@@ -118,24 +131,23 @@ def _build_match_key(ev, rival_team_id):
     ts = ev.get("startTimestamp")
     date_str = datetime.fromtimestamp(ts, tz=timezone.utc).strftime("%Y-%m-%d") if ts else "unknown"
 
-    home_id = (ev.get("homeTeam", {}) or {}).get("id")
-    home_name = (ev.get("homeTeam", {}) or {}).get("name", "home")
-    away_name = (ev.get("awayTeam", {}) or {}).get("name", "away")
+    home = ev.get("homeTeam", {}) or {}
+    away = ev.get("awayTeam", {}) or {}
 
-    is_home = home_id == rival_team_id
-    opponent_raw = away_name if is_home else home_name
-    # Normalizar nombre del oponente
-    opponent = (opponent_raw.lower()
-                .replace(" ", "_").replace(".", "").replace("-", "_")
-                .replace("á","a").replace("é","e").replace("í","i")
-                .replace("ó","o").replace("ú","u").replace("ñ","n"))[:25]
+    is_home = home.get("id") == rival_team_id
+    opp = away if is_home else home
+    # Slug canónico del registro (config.EQUIPOS), el mismo de la carpeta del
+    # club en rivals/. Solo si el equipo no está registrado se usa su nombre.
+    opponent = config.slug_de(opp.get("id"), opp.get("name"))
 
     venue = "h" if is_home else "a"
     return f"{date_str}_vs_{opponent}_{venue}"
 
 
 def scrape_rival_recent(rival_slug, n_matches=None, season=None, headless=False,
-                        include_heatmaps=True):
+                        include_heatmaps=True, team_id=None, team_name=None,
+                        tournament_id=None, out_base=None, season_id=None,
+                        quick=False, retry_empty=False, force=False):
     """
     Descarga los partidos de Primera Nacional del rival en la temporada
     indicada, con los MISMOS datos que un partido de Chaco (usa fetch_match).
@@ -143,7 +155,11 @@ def scrape_rival_recent(rival_slug, n_matches=None, season=None, headless=False,
     Parámetros
     ----------
     rival_slug : str
-        Clave del rival en config.RIVALS (ej. 'temperley', 'colon').
+        Clave del rival en config.RIVALS (ej. 'temperley', 'colon'). Si se
+        pasan `team_id`/`team_name` explícitos, `rival_slug` se usa solo
+        como nombre de carpeta (no hace falta que esté en config.RIVALS) —
+        así se reusa esta función para otros torneos, ver
+        src/scraping/lpf_scraper.py.
     n_matches : int o None
         Cuántos partidos bajar (los últimos N, los más recientes). Default
         None = TODOS los partidos jugados de la temporada — necesario para
@@ -157,6 +173,19 @@ def scrape_rival_recent(rival_slug, n_matches=None, season=None, headless=False,
         Bajar el heatmap de cada jugador que jugó (~22 requests extra por
         partido). Es lo que hace el scraper de Chaco. Ponelo en False solo si
         querés una pasada rápida sin mapas de calor.
+    team_id, team_name : opcionales
+        Si se pasan, se usan en vez de buscar en config.RIVALS (para
+        equipos de otro torneo/registro, ej. Liga Profesional).
+    tournament_id : opcional
+        Torneo a filtrar en SofaScore. Default: config.UNIQUE_TOURNAMENT_ID
+        (Primera Nacional). Pasar config.UNIQUE_TOURNAMENT_ID_LPF para LPF.
+    out_base : opcional
+        Carpeta destino. Default: config.rivals_dir(season)/rival_slug.
+    season_id : opcional
+        ID de temporada en SofaScore a filtrar. Default: config.SEASON_IDS
+        (Primera Nacional) — OJO, otros torneos tienen su propio registro de
+        season_id (ej. config.SEASON_IDS_LPF) y hay que pasarlo explícito,
+        si no el filtro de temporada nunca matchea y devuelve 0 partidos.
 
     Retorna
     -------
@@ -167,66 +196,48 @@ def scrape_rival_recent(rival_slug, n_matches=None, season=None, headless=False,
         (sin event_clean.csv) se vuelve a bajar entero.
     """
     season = season or config.CURRENT_SEASON
-    season_id = config.SEASON_IDS.get(season)
+    season_id = season_id or config.SEASON_IDS.get(season)
 
-    rival_info = config.RIVALS.get(rival_slug)
-    if not rival_info:
-        available = list(config.RIVALS.keys())
-        raise ValueError(
-            f"Rival '{rival_slug}' no encontrado en config.RIVALS.\n"
-            f"Disponibles: {available}"
-        )
+    if team_id is None:
+        rival_info = config.RIVALS.get(rival_slug)
+        if not rival_info:
+            available = list(config.RIVALS.keys())
+            raise ValueError(
+                f"Rival '{rival_slug}' no encontrado en config.RIVALS.\n"
+                f"Disponibles: {available}"
+            )
+        team_id = rival_info["id"]
+        rival_name = team_name or rival_info["name"]
+    else:
+        rival_name = team_name or rival_slug
 
-    team_id = rival_info["id"]
-    rival_name = rival_info["name"]
-    out_base = os.path.join(config.rivals_dir(season), rival_slug)
+    out_base = out_base or os.path.join(config.rivals_dir(season), rival_slug)
     os.makedirs(out_base, exist_ok=True)
 
+    max_pages = 2 if quick else 8
     if n_matches:
         print(f"Scrapeando los últimos {n_matches} partidos de {rival_name} (id={team_id})...")
     else:
         print(f"Scrapeando TODOS los partidos de {rival_name} en la temporada {season} (id={team_id})...")
 
-    scraped = []
-
     with SofascoreClient(headless=headless) as client:
-        events = get_rival_recent_events(client, team_id, n=n_matches, season_id=season_id)
+        events = get_rival_recent_events(client, team_id, n=n_matches, season_id=season_id,
+                                         tournament_id=tournament_id, max_pages=max_pages)
 
         if not events:
-            print(f"  No se encontraron partidos recientes de Primera Nacional para {rival_name}.")
+            print(f"  No se encontraron partidos recientes (tournament_id={tournament_id or config.UNIQUE_TOURNAMENT_ID}, season_id={season_id}) para {rival_name}.")
             return []
 
-        print(f"  Encontrados {len(events)} partidos en Primera Nacional.\n")
+        print(f"  {len(events)} partidos en el feed.\n")
+        items = [(_build_match_key(ev_data, team_id), mid) for mid, ev_data in events]
+        stats = _scrape_series(
+            client, items, out_base, include_heatmaps=include_heatmaps,
+            retry_empty=retry_empty, force=force,
+        )
 
-        for i, (mid, ev_data) in enumerate(events):
-            mk = _build_match_key(ev_data, team_id)
-            match_dir = os.path.join(out_base, mk)
-
-            if _match_done(match_dir):
-                print(f"  [{i+1}/{len(events)}] Ya existe: {mk}")
-                scraped.append(mk)
-                continue
-
-            print(f"  [{i+1}/{len(events)}] {mk}  (id={mid})")
-
-            # Mismo fetch que los partidos de Chaco: los 8 endpoints + heatmaps.
-            # fetch_match saca el event_id de la "url", así que le pasamos el
-            # formato que espera (…#id:{mid}).
-            try:
-                res = fetch_match(client, mk, f"#id:{mid}", base_dir=out_base,
-                                  include_heatmaps=include_heatmaps)
-                faltantes = [ep for ep, ok in res.items() if not ok]
-                if faltantes:
-                    print(f"        sin datos: {', '.join(faltantes)}")
-                scraped.append(mk)
-            except Exception as e:
-                print(f"        ERROR: {e}")
-
-            if i < len(events) - 1:
-                time.sleep(random.uniform(config.MIN_DELAY, config.MAX_DELAY))
-
-    print(f"\n✅ Rival scraping completo: {len(scraped)}/{len(events)} partidos.")
-    return scraped
+    print(f"\n✅ {rival_name}: {stats['scraped']} bajados, "
+          f"{stats['done']} ya estaban, {stats['error']} con error.")
+    return [mk for mk, _ in items]
 
 
 def rival_already_scraped(rival_slug, season=None, min_matches=1):
@@ -239,7 +250,7 @@ def rival_already_scraped(rival_slug, season=None, min_matches=1):
     return len(matches) >= min_matches
 
 
-def scrape_rival_managers(rival_slug, season=None, headless=True):
+def scrape_rival_managers(rival_slug, season=None, headless=True, out_base=None):
     """
     Descarga el DT de cada partido ya scrapeado del rival, usando el endpoint
     `/event/{id}/managers` (que NO viene en el lineups/event que bajamos por
@@ -250,10 +261,16 @@ def scrape_rival_managers(rival_slug, season=None, headless=True):
     los partidos que ya lo tienen se saltean sin llamada de red, así que
     correrlo de nuevo para completar partidos nuevos es barato.
 
+    out_base : opcional
+        Carpeta donde están los partidos ya scrapeados del equipo. Default:
+        config.rivals_dir(season)/rival_slug (Primera Nacional). Pasar
+        config.lpf_team_dir(slug, season) para reusar esto con equipos de
+        Liga Profesional (ver src/scraping/lpf_scraper.py).
+
     Retorna la lista de match_keys para los que quedó disponible el DT.
     """
     season = season or config.CURRENT_SEASON
-    rival_dir = os.path.join(config.rivals_dir(season), rival_slug)
+    rival_dir = out_base or os.path.join(config.rivals_dir(season), rival_slug)
     if not os.path.isdir(rival_dir):
         print(f"  No hay datos scrapeados de {rival_slug} en {season}.")
         return []

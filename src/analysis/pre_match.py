@@ -669,9 +669,9 @@ def head_to_head(rival_slug, season=None):
     las temporadas con datos scrapeados (no solo la actual) — varios rivales
     de 2026 ya se habían enfrentado en 2025.
 
-    OJO: NO matchea por el slug del match_key (`rival_slug in mk`) porque el
-    slug puede cambiar entre temporadas (ej. 'club_mitre' en 2025 vs 'mitre'
-    en 2026, 'gimnasia_jujuy' vs 'gimnasia_de_jujuy'). Matchea por el
+    OJO: NO matchea por el slug del match_key (`rival_slug in mk`). Los slugs
+    ya están unificados (config.EQUIPOS), pero una temporada vieja scrapeada
+    antes de registrar al equipo puede traer otro nombre. Matchea por el
     `team_id` de SofaScore (event_clean.csv: home_team_id/away_team_id contra
     config.RIVALS[rival_slug]['id']), que es estable entre temporadas.
 
@@ -938,6 +938,55 @@ _TWOWAY_STATS = {
 }
 
 
+_PELOTA_PARADA = ("corner", "free-kick", "set-piece", "throw-in-set-piece")
+
+
+def _shotmap_extras(sh):
+    """npxG, xGOT, penales, palos, remates de cabeza y de pelota parada de los
+    remates de UN equipo en un partido. Los goles en contra no cuentan."""
+    sh = sh[sh["situation"] != "own-goal"]
+    penal = sh["situation"] == "penalty"
+    xg = pd.to_numeric(sh["xg"], errors="coerce").fillna(0)
+    xgot = pd.to_numeric(sh.get("xgot"), errors="coerce").fillna(0)
+    return {
+        "npxg":            round(float(xg[~penal].sum()), 3),
+        "xgot":            round(float(xgot.sum()), 3),
+        "penalties":       int(penal.sum()),
+        "penalties_scored": int((penal & (sh["shotType"] == "goal")).sum()),
+        "woodwork":        int((sh["shotType"] == "post").sum()),
+        "headers":         int((sh["bodyPart"] == "head").sum()),
+        "setpiece_shots":  int(sh["situation"].isin(_PELOTA_PARADA).sum()),
+    }
+
+
+def _tracking_del_partido(match_dir, team_home):
+    """{km_for, km_against, sprints_for, sprints_against} sumando a los
+    jugadores de cada lado, o {} si el partido no trae datos físicos."""
+    path = os.path.join(match_dir, "raw", "lineups.json")
+    if not os.path.exists(path):
+        return {}
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+    except Exception:
+        return {}
+    out = {}
+    for side in ("home", "away"):
+        lado = "for" if (side == "home") == team_home else "against"
+        km = sp = 0.0
+        hay = False
+        for e in (data.get(side) or {}).get("players", []) or []:
+            st = e.get("statistics") or {}
+            if st.get("kilometersCovered") is not None:
+                hay = True
+                km += float(st.get("kilometersCovered") or 0)
+                sp += float(st.get("numberOfSprints") or 0)
+        if hay:
+            out[f"km_{lado}"] = round(km, 2)
+            out[f"sprints_{lado}"] = sp
+    return out
+
+
 def team_two_way_profile(match_keys, base_dir):
     """
     Perfil promedio POR PARTIDO de un equipo, en ataque (_for) y en defensa
@@ -953,7 +1002,10 @@ def team_two_way_profile(match_keys, base_dir):
     Devuelve un dict de promedios por partido: goals_for/against,
     xg_for/against, shots_for/against, sot_for/against, shots_off_*,
     shots_blocked_*, corners_*, fouls_*, y las de sólo el equipo (possession,
-    passes_acc, tackles, interceptions, clearances). Incluye n_matches.
+    passes_acc, tackles, interceptions, clearances). Del shotmap salen además
+    npxg_*, xgot_*, penalties_*, penalties_scored_*, woodwork_*, headers_* y
+    setpiece_shots_*; del raw/lineups.json, km_* y sprints_* (promedio solo de
+    los partidos con tracking, que cuenta n_tracking). Incluye n_matches.
     """
     from collections import defaultdict
     acc = defaultdict(list)
@@ -991,7 +1043,14 @@ def team_two_way_profile(match_keys, base_dir):
                 ag = sh[sh["isHome"] != team_home]
                 acc["xg_for"].append(round(fm["xg"].sum(), 3))
                 acc["xg_against"].append(round(ag["xg"].sum(), 3))
+                for lado, d in (("for", fm), ("against", ag)):
+                    for k, v in _shotmap_extras(d).items():
+                        acc[f"{k}_{lado}"].append(v)
                 used = True
+
+        # --- km y sprints (raw/lineups.json; casi ningún partido los trae) ---
+        for lado, v in _tracking_del_partido(mdir, team_home).items():
+            acc[lado].append(v)
 
         # --- goles (incidents) ---
         ip = os.path.join(mdir, "incidents_clean.csv")
@@ -1008,6 +1067,8 @@ def team_two_way_profile(match_keys, base_dir):
 
     prof = {k: round(sum(v) / len(v), 2) for k, v in acc.items() if v}
     prof["n_matches"] = n
+    prof["n_shotmap"] = len(acc.get("xg_for", []))
+    prof["n_tracking"] = len(acc.get("km_for", []))
     return prof
 
 

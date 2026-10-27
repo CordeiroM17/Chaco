@@ -5,6 +5,7 @@ mplsoccer
 networkx
 requests
 lifelines
+scikit-learn
 
 # Scraping de Sofascore (API directa por event_id)
 selenium

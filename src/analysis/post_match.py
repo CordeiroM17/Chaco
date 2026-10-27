@@ -10,7 +10,10 @@ import pandas as pd
 import numpy as np
 
 import config
-from src.analysis.season import is_home_match, get_opponent, get_match_date, compute_score_from_incidents, get_result
+from src.analysis.season import (
+    is_home_match, get_opponent, get_match_date, compute_score_from_incidents,
+    get_result, expected_points,
+)
 
 
 def load_match_data(match_key, season=None):
@@ -85,6 +88,41 @@ def xg_analysis(match_key, data=None, season=None):
     }
 
 
+def match_expected_points(match_key, data=None, season=None):
+    """
+    Puntos esperados (xPoints) de ESTE partido puntual, a partir de su xG real
+    (vía season.expected_points). Da el titular tipo "mereció 1.8 puntos,
+    sacó 0" — el argumento más directo para un partido perdido inmerecido.
+
+    Devuelve dict: chaco_xg, rival_xg, real_points, xpoints, xpoints_diff,
+                   p_win, p_draw, p_loss, verdict.
+    """
+    xg = xg_analysis(match_key, data=data, season=season)
+    if xg is None:
+        return None
+
+    result = get_result(xg["chaco_goals"], xg["rival_goals"])
+    real_points = {"W": 3, "D": 1, "L": 0}.get(result, 0)
+
+    ep = expected_points(xg["chaco_xg"], xg["rival_xg"])
+    xpoints_diff = round(real_points - ep["xpoints"], 2)
+
+    if xpoints_diff <= -1.0:
+        verdict = f"Mereció {ep['xpoints']:.1f} puntos y sacó {real_points} — rendimiento por debajo de lo esperado"
+    elif xpoints_diff >= 1.0:
+        verdict = f"Mereció {ep['xpoints']:.1f} puntos y sacó {real_points} — sacó más de lo que generó"
+    else:
+        verdict = f"Mereció {ep['xpoints']:.1f} puntos y sacó {real_points} — resultado en línea con lo generado"
+
+    return {
+        "chaco_xg": xg["chaco_xg"], "rival_xg": xg["rival_xg"],
+        "real_points": real_points, "xpoints": ep["xpoints"],
+        "xpoints_diff": xpoints_diff,
+        "p_win": ep["p_win"], "p_draw": ep["p_draw"], "p_loss": ep["p_loss"],
+        "verdict": verdict,
+    }
+
+
 def player_performance_table(match_key, data=None, season=None):
     """
     Tabla completa de jugadores de Chaco con sus métricas del partido.
@@ -114,11 +152,31 @@ def player_performance_table(match_key, data=None, season=None):
         chaco["xg_shotmap"] = 0
         chaco["shots"] = 0
 
+    # Lo que lineups_clean.csv no trae: del raw/lineups.json (regateado, malos
+    # controles, penales, palos, km...) y del shotmap por jugador (npxG, xGOT,
+    # remates de cabeza y de pelota parada). Mismas definiciones que el pool
+    # de scouting.
+    from src.analysis import scouting as SC
+    match_dir = os.path.join(config.season_data_dir(season), match_key)
+    raw = SC._stats_del_raw(match_dir)
+    remates = SC._remates_del_partido(match_dir)
+    pid = pd.to_numeric(chaco.get("player_id"), errors="coerce")
+    for c in list(SC._RAW_STATS.values()) + SC.TRACKING:
+        chaco[c] = [(raw.get(int(p)) or {}).get(c) if pd.notna(p) else None for p in pid]
+    for c in SC._SHOTMAP_STATS:
+        chaco[c] = [(remates.get(int(p)) or {}).get(c, 0.0) if pd.notna(p) else 0.0
+                    for p in pid]
+
     keep_cols = [
         "player_name", "position", "is_starter", "minutes_played", "rating",
-        "goals", "assists", "shots", "xg_shotmap", "xa",
+        "goals", "assists", "shots", "xg_shotmap", "npxg", "xgot", "xa",
+        "remates_cabeza", "remates_pelota_parada", "tiros_al_palo",
         "key_passes", "total_passes", "accurate_passes",
-        "tackles", "interceptions", "duels_won", "duels_lost",
+        "dribbles_attempted", "dribbles_won", "malos_controles",
+        "tackles", "interceptions", "regateado", "duels_won", "duels_lost",
+        "penales_provocados", "penales_cometidos", "penales_errados",
+        "despejes_en_linea", "saves", "atajadas_dentro_area",
+        "km_recorridos", "sprints",
         "yellow_cards", "red_cards", "substitute_in", "substitute_out",
     ]
     available = [c for c in keep_cols if c in chaco.columns]
@@ -202,6 +260,59 @@ def momentum_phases(match_key, data=None, season=None, window=5):
     )
 
     return df[["minute", "value", "smooth", "label"]]
+
+
+def xg_cumulative(match_key, data=None, season=None):
+    """
+    xG acumulado minuto a minuto de ambos equipos (la "carrera de xG" /
+    worm chart) — a diferencia de xg_by_phase (que suma en bloques fijos de
+    15'), acá el valor sube en el instante exacto de cada remate, para
+    dibujar un step chart continuo.
+
+    Retorna DataFrame [minute, chaco_xg_cum, rival_xg_cum], con un punto en
+    minute=0 (arranca en 0-0) y uno en el minuto final del partido (para que
+    la línea llegue plana hasta el pitazo final, no se corte en el último
+    remate).
+    """
+    if data is None:
+        data = load_match_data(match_key, season)
+
+    df_sh = data.get("shotmap")
+    if df_sh is None or df_sh.empty:
+        return pd.DataFrame()
+
+    home_match = is_home_match(match_key)
+    df = df_sh.copy()
+    df["time"] = pd.to_numeric(df["time"], errors="coerce")
+    df["addedTime"] = pd.to_numeric(df.get("addedTime"), errors="coerce").fillna(0)
+    df["minute"] = df["time"] + df["addedTime"]
+    df["xg"] = pd.to_numeric(df["xg"], errors="coerce").fillna(0)
+    df = df.dropna(subset=["minute"]).sort_values("minute")
+
+    end_minute = max(90.0, float(df["minute"].max())) if not df.empty else 90.0
+
+    def _cum_points(side_df):
+        side_df = side_df.sort_values("minute")
+        cum = side_df["xg"].cumsum()
+        minutes = [0.0] + side_df["minute"].tolist() + [end_minute]
+        last = float(cum.iloc[-1]) if not cum.empty else 0.0
+        values = [0.0] + cum.tolist() + [last]
+        return dict(zip(minutes, values))  # minuto repetido -> se queda el último (correcto: ya viene ordenado)
+
+    chaco_map = _cum_points(df[df["isHome"] == home_match])
+    rival_map = _cum_points(df[df["isHome"] != home_match])
+
+    all_minutes = sorted(set(chaco_map) | set(rival_map))
+    rows = []
+    last_c = last_r = 0.0
+    for m in all_minutes:
+        if m in chaco_map:
+            last_c = chaco_map[m]
+        if m in rival_map:
+            last_r = rival_map[m]
+        rows.append({"minute": m, "chaco_xg_cum": round(last_c, 3), "rival_xg_cum": round(last_r, 3)})
+
+    return pd.DataFrame(rows)
 
 
 def xg_by_phase(match_key, data=None, season=None, bin_size=15):

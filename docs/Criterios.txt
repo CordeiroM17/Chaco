@@ -1,0 +1,78 @@
+1. $k$-Nearest Neighbors ($k$-NN): Búsqueda de gemelos estadísticos (Player Similarity)El documento actual propone buscar reemplazos aplicando filtros rígidos por percentiles (ej. composite_score_percentile >= 80). Esto tiene una limitación: dos jugadores pueden tener un índice de 80 con estilos completamente distintos (uno por velocidad y regate, otro por juego asociativo).  En qué mejora el sistema: Permite responder a la pregunta táctica real: "Se me va mi volante mixto titular, ¿quién en la categoría juega de forma casi idéntica a él?".Cómo implementarlo:Se toma el vector de métricas normalizadas ($p90$ y $PAdj$) de un jugador.  Se aplica una métrica de distancia (como similitud coseno o distancia euclidiana ponderada por los pesos del Scoring Model).  El algoritmo devuelve los $k$ vecinos más cercanos en el espacio vectorial de la divisional.Ajuste para Moneyball/Apuesta: Podés buscar el $k$-NN del mejor jugador de la liga, pero filtrando la búsqueda únicamente sobre jugadores sub-23 o de equipos de mitad de tabla hacia abajo, identificando clones más baratos o con potencial.  
+Cuando se trabaja con datos tabulares y agregados de eventos (sin coordenadas espaciales continuas ni tracking de video) en categorías de ascenso, los modelos de alta complejidad tienden a sobreajustar o generar correlaciones espurias. En este entorno, el valor analítico se obtiene combinando modelos sencillos, robustos y contextualizados en el dominio del fútbol:  1. Reducción de dimensionalidad guiada por dominio tácticoEn una liga como la Primera B hay un universo muestral reducido: entre 70 y 120 futbolistas por demarcación que superen el umbral de minutos.  Aplicar modelos sobre más de 25 variables individuales simultáneamente produce dispersión por la "maldición de la dimensionalidad".Sugerencia: Agrupar las variables en macro-dimensiones funcionales (ej. Volumen Defensivo, Capacidad de Salida, Eficacia en Duelos) usando PCA (Análisis de Componentes Principales) o directamente los índices ponderados de la especificación técnica. Esto reduce el espacio a 3 o 4 dimensiones densas antes de comparar perfiles.  2. Regularización bayesiana (Shrinkage) para muestras pequeñasAunque se marque un corte preventivo en 600 minutos, un jugador con 650 minutos sigue presentando un sesgo muestral alto (dos goles en pocos minutos inflan desproporcionadamente las métricas $p90$).  Sugerencia: Aplicar suavizado empírico bayesiano (Empirical Bayes Shrinkage). Este método "empuja" las métricas por 90 minutos de los futbolistas con pocos minutos jugados hacia la media global de la liga en esa posición, reduciendo la incertidumbre hasta que acumulen una cantidad estadísticamente representativa de partidos.3. Distancia de Mahalanobis o Coseno Ponderado en $k$-NNSi se calcula la distancia euclidiana estándar entre jugadores, el modelo asume que todas las variables son independientes. En fútbol, muchas métricas están fuertemente correlacionadas (ej. quites e intercepciones, o pases clave y asistencias), lo que duplica el peso de una misma cualidad.  Sugerencia:Utilizar la Distancia de Mahalanobis, que incorpora la matriz de covarianza de las métricas y neutraliza la redundancia estadística.O bien, aplicar Similitud Coseno Ponderada, multiplicando cada métrica por los porcentajes asignados en el Scoring Model según el rol funcional buscado.  4. Clustering no supervisado para detección de arquetiposLas posiciones declaradas en datasets públicos suelen ser excesivamente amplias (por ejemplo, catalogar como Midfielder tanto a un volante de marca posicional como a un mediapunta asociativo).  Sugerencia: Correr algoritmos de agrupamiento como K-Means o Gaussian Mixture Models (GMM) sobre las métricas $PAdj$ y $p90$. De este modo, los jugadores se agrupan por su comportamiento real en la cancha (arquetipos de rol) y no por la etiqueta rígida de su ficha.  5. Normalización con RobustScalerEn divisiones donde la calidad de las canchas, arbitrajes y planteos varía drásticamente, las métricas sufren de valores atípicos (outliers extremos).Sugerencia: Evitar MinMaxScaler o StandardScaler (afectados por valores extremos). Utilizar RobustScaler (basado en la mediana y el rango intercuartílico IQR), lo que evita que un partido anómalo desvíe la puntuación de un futbolista.6. El modelo como embudo cuantitativo (Filtro previo a video)La ausencia de datos de posicionamiento sin balón o presión coordinada impide que un modelo estadístico tome decisiones autónomas al 100%.Sugerencia: Configurar el sistema como un embudo de preselección (screening). El algoritmo clasifica el rendimiento y filtra el universo de 500 jugadores de la liga a una lista corta de 10 o 15 opciones viables, transfiriendo esos perfiles al cuerpo técnico y scouts para la validación final por video.  
+
+La combinación de PCA (Análisis de Componentes Principales) y $k$-NN ($k$-Nearest Neighbors) resuelve el problema de la redundancia estadística en el fútbol: comprime métricas altamente correlacionadas (como quites e intercepciones) en ejes tácticos independientes y luego calcula qué jugadores están más cerca en ese espacio reducido.Flujo de trabajo del pipelineMétricas normalizadas (p90 / PAdj)
+              ↓
+  Escalado robusto (RobustScaler)
+              ↓
+ Reducción dimensional (PCA: 3-4 ejes tácticos)
+              ↓
+ Espacio latente descorrelacionado
+              ↓
+Búsqueda de vecinos más cercanos (k-NN)
+Selección y filtrado: Se aíslan los futbolistas de un mismo rol posicional con un mínimo de minutos representativo (por ejemplo, más de 600 minutos).  Escalado (RobustScaler): Centra los datos usando la mediana y el rango intercuartílico ($IQR$), evitando que valores extremos en partidos aislados distorsionen la escala.PCA: Convierte 10 o 15 métricas correlacionadas en 3 o 4 componentes principales ortogonales (independientes entre sí) que expliquen entre el $75\%$ y el $85\%$ de la varianza total. Por ejemplo:PC1: Volumen de contención y duelos.PC2: Capacidad de distribución y progresión con balón.PC3: Amenaza ofensiva y remate.$k$-NN (NearestNeighbors): Se entrena sobre las coordenadas generadas por el PCA. Al consultar un jugador objetivo, calcula la distancia euclidiana o de coseno para encontrar a sus clones estadísticos en la liga.Implementación en Python con scikit-learnPythonimport numpy as np
+import pandas as pd
+from sklearn.decomposition import PCA
+from sklearn.neighbors import NearestNeighbors
+from sklearn.preprocessing import RobustScaler
+
+# 1. Conjunto de datos de ejemplo (filtrado a mediocampistas con > 600 min)
+data = {
+    "player_name": ["Jugador A", "Jugador B", "Jugador C", "Jugador D", "Jugador E"],
+    "team": ["Equipo 1", "Equipo 2", "Equipo 3", "Equipo 4", "Equipo 5"],
+    "interceptions_padj": [2.4, 2.1, 0.8, 2.3, 0.9],
+    "tackles_padj": [3.1, 2.8, 1.2, 3.0, 1.4],
+    "ground_duels_pct": [58.0, 55.0, 42.0, 57.0, 44.0],
+    "key_passes_p90": [0.6, 0.8, 2.2, 0.7, 2.0],
+    "passes_final_third_p90": [4.1, 4.5, 8.9, 4.2, 8.5],
+    "accurate_passes_pct": [82.0, 80.0, 85.0, 81.0, 84.0],
+}
+df = pd.DataFrame(data)
+
+features = [
+    "interceptions_padj",
+    "tackles_padj",
+    "ground_duels_pct",
+    "key_passes_p90",
+    "passes_final_third_p90",
+    "accurate_passes_pct",
+]
+X = df[features]
+
+# 2. Escalado de métricas
+scaler = RobustScaler()
+X_scaled = scaler.fit_transform(X)
+
+# 3. Reducción con PCA (conservar el 85% de la varianza explicada)
+pca = PCA(n_components=0.85, random_state=42)
+X_pca = pca.fit_transform(X_scaled)
+
+print(f"Componentes conservadas: {pca.n_components_}")
+print(f"Varianza explicada total: {pca.explained_variance_ratio_.sum():.2%}")
+
+# 4. Ajuste del modelo k-NN en el espacio PCA
+knn = NearestNeighbors(n_neighbors=3, metric="euclidean")
+knn.fit(X_pca)
+
+
+# 5. Función de consulta de reemplazos
+def buscar_reemplazos(nombre_jugador, df_original, X_pca_matrix, model, k=3):
+    idx = df_original[df_original["player_name"] == nombre_jugador].index[0]
+    vector_objetivo = X_pca_matrix[idx].reshape(1, -1)
+
+    distancias, indices = model.kneighbors(vector_objetivo, n_neighbors=k + 1)
+
+    # Excluir el propio jugador buscado (distancia 0)
+    similares_idx = indices[0][1:]
+    similares_dist = distancias[0][1:]
+
+    resultados = df_original.iloc[similares_idx][["player_name", "team"]].copy()
+    resultados["distancia_similitud"] = similares_dist
+    return resultados
+
+
+# Ejemplo: buscar reemplazos para el volante defensivo "Jugador A"
+candidatos = buscar_reemplazos("Jugador A", df, X_pca, knn, k=2)
+print("\nReemplazos más cercanos a Jugador A:")
+print(candidatos)
+Ventajas de este enfoque combinadoElimina la redundancia (Multicolinealidad): Si utilizás 6 métricas defensivas directas en $k$-NN, el modelo le da 6 veces más peso a la defensa que a la distribución. PCA unifica esas 6 métricas en un único eje defensivo sin correlación.Computa distancias en un espacio denso: La distancia euclidiana falla en espacios de 20 o 30 dimensiones (todas las distancias tienden a parecerse). Reducir a 2, 3 o 4 componentes devuelve distancias geométricas significativas.Interpretabilidad táctica: Inspeccionando los coeficientes (pca.components_), podés saber exactamente qué significa cada componente principal antes de recomendar un jugador al cuerpo técnico.

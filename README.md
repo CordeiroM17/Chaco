@@ -7,6 +7,12 @@ de toda la temporada sin re-scrapear.
 
 Todo se configura desde un único cerebro central: **`config.py`**.
 
+**Cómo trabajar con los notebooks** (pre-partido, post-partido, fin de fecha,
+fin de año, mercado de pases y temporadas pasadas): [`docs/GUIA_NOTEBOOKS.md`](docs/GUIA_NOTEBOOKS.md).
+
+La base de jugadores de todas las temporadas vive en `data/jugadores/`
+(`src/jugadores/`, notebook `base_jugadores.ipynb`).
+
 ## Estructura
 
 ```
@@ -30,10 +36,13 @@ src/
     season.py              # resúmenes y stats de temporada / jugadores
     post_match.py          # análisis profundo de un partido (xG, cambios, momentum)
     pre_match.py           # scouting: forma, perfil táctico rival, H2H
+    scouting.py            # pool de toda la categoría: roles, p90/PAdj, scores, semáforo
+    similitud.py           # k-NN de gemelos estadísticos + terna de fichajes
   visualization/
     season.py              # shotmaps, evolución de puntos, xG, top jugadores
     match.py               # momentum, posiciones promedio, heatmaps, timeline, ratings
     pre_match.py           # forma comparada, tendencia xG, radar, jugadores rival
+    scouting.py            # semáforo del plantel, ranking de gemelos, mapa del puesto
   reports/
     season.py              # informes de temporada/partido/jugador con Claude
     post_match.py          # informe narrativo post-partido
@@ -68,8 +77,7 @@ re-scrapean** lo que ya está bajado.
 | `analisis_temporada.ipynb` | Temporada completa: tabla, stats, gráficos, pizzas de jugadores e informe | `SEASON`, `SCRAPE_MISSING` |
 | `analisis_post_partido.ipynb` | Un partido: shotmap, momentum, heatmaps (grid + individuales), radios de acción, xG por tramos, defensa, informe | `SEASON`, `MATCH_KEY` |
 | `analisis_pre_partido.ipynb` | Scouting del rival: forma, perfil táctico, H2H, informe | `SEASON`, `NEXT_MATCH_KEY`, `RIVAL_SLUG` |
-| `descargar_video.ipynb` | **Fase B**: baja el video de un partido desde el link del player (lpfplay/AFA) | `PAGE_URL`, `SEASON`, `MATCH_KEY`, `QUALITY` |
-| `analisis_video.ipynb` | **Fase B**: video del partido → tracking validado contra SofaScore | `SEASON`, `MATCH_KEY`, `TEST_SECONDS` |
+| `scouting_similitud.ipynb` | Auditoría del plantel (semáforo de renovaciones) + recomendador de refuerzos por k-NN sobre los 36 equipos de la categoría | `SEASON`, `TEAM_SLUG`, `JUGADOR` |
 
 Los notebooks usan `%autoreload 2`, así que editar cualquier módulo de `src/` se
 refleja sin reiniciar el kernel.
@@ -95,23 +103,32 @@ el `event_id` de cada URL. Para esquivar Cloudflare navega con un navegador real
 El JSON crudo de cada endpoint queda en `<match_key>/raw/`, así se puede
 re-parsear sin volver a scrapear.
 
-## Pipeline de video (Fase B)
+## Scouting: auditoría del plantel + recomendador de refuerzos
 
-`src/video/` convierte el video de un partido en tracking con coordenadas
-**OPTA 0-100** (el mismo sistema que SofaScore — todo se cruza directo):
+`src/analysis/scouting.py` arma un pool con **una fila por jugador de toda la
+Primera Nacional** (Zona A + Zona B: 482 partidos, 36 equipos, ~1080 jugadores)
+y `src/analysis/similitud.py` busca sobre él los *gemelos estadísticos* de un
+jugador con k-NN. El punto de entrada es `notebooks/primera_nacional/scouting_similitud.ipynb`.
 
-- `downloader.py` — baja el video desde el link del player. Captura el
-  `master.m3u8` con un navegador headless (el stream no está en el HTML) y lo
-  descarga con yt-dlp. Probado con lpfplay.com / immergo.tv (HLS sin DRM).
-- `schema.py` — contrato de datos (`tracking/positions.csv`, `ball_positions.csv`)
-- `pipeline.py` — video → detección (YOLOv8) → tracking (ByteTrack) → equipos
-  (clusters de camiseta) → homografía → CSV
-- `validation.py` — valida el tracking contra SofaScore (lineups = minutos y
-  jugadores oficiales; plausibilidad espacial de la homografía)
+Tres cosas a saber antes de tocarlo:
 
-Convención: el video va en `data/temporadas/{año}/partidos/{match_key}/video/`
-y los derivados quedan en `.../tracking/`. Dependencias en
-`requirements-video.txt`; pesos de los modelos en `models/` (ver su README).
+- **Cada partido está guardado en la carpeta de los dos equipos.** El pool
+  deduplica por `event_id` (964 carpetas → 482 partidos). `scouting.verificar_pool()`
+  lo controla: si el promedio de jugadores en cancha por partido no da ~11, hay
+  doble conteo.
+- **El rol no sale de SofaScore**, que solo distingue G/D/M/F. Sale de la posición
+  media en cancha (`average_positions_clean.csv`), usando la amplitud en valor
+  absoluto: DFC, LAT, MCD, MC, EXT_MP, DC y ARQ.
+- **Varias métricas se leen del `raw/lineups.json`**, no del CSV limpio:
+  recuperaciones, bloqueos, errores que derivan en remate, quites ganados, pases
+  por mitad de cancha, edad y valor de mercado.
+
+Los criterios (p90, ajuste por posesión, percentiles por puesto, índices
+compuestos, semáforo de continuidad y terna de fichajes) salen de
+`docs/especificacion_analisis_primera_b.md` y `docs/Criterios.txt`, podados a lo
+que el dataset banca — la última celda del notebook lista qué quedó afuera y por
+qué. El resultado es un **embudo de preselección para validar por video**, no un
+decisor de fichajes.
 
 ## Cambiar de temporada
 

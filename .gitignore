@@ -20,9 +20,28 @@ Thumbs.db
 # Dataset
 data
 
-# Video
-models
-simular
-
 # Claude
 .claude
+# Reels renderizados
+redes_sociales/reels/salidas/
+
+# Remotion
+node_modules/
+redes_sociales/Mandar/out/
+
+# Personal (CV, postulaciones): nunca al repo, que es público
+oferta de trabajo/
+
+# Papers con derechos de autor (se leen local)
+docs/papers/
+
+# Basura de consola y de LaTeX
+*.stackdump
+texput.log
+
+# Redes: páginas web guardadas y música con derechos
+*.descarga
+*.mp3
+
+# Cache del pool de scouting calculado desde carpetas
+pool_scouting_carpetas.csv

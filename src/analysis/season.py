@@ -7,6 +7,7 @@ estadísticas globales y análisis de jugadores.
 
 import os
 import re
+import math
 import importlib.util
 
 import pandas as pd
@@ -201,6 +202,76 @@ def _venue_record(df, venue):
     return f"{w}V-{d}E-{l}D"
 
 
+# ─── Puntos esperados (xPoints) ───────────────────────────────────────────────
+# Convierte el xG REAL de un partido puntual (no un rating de temporada — para
+# eso está src/analysis/simulation.py) en puntos esperados, vía Poisson
+# independiente sobre esos dos valores de xG. "Cuántos puntos mereció Chaco
+# en ESTE partido según lo que generó y concedió."
+
+def _poisson_pmf(k, lam):
+    if lam <= 0:
+        return 1.0 if k == 0 else 0.0
+    return math.exp(-lam) * lam ** k / math.factorial(k)
+
+
+def expected_points(xg_for, xg_against, max_goals=10):
+    """Puntos esperados de un partido a partir del xG generado y concedido en
+    ESE partido. Modela los goles de cada lado como Poisson independiente con
+    media = xG real del partido, y suma la probabilidad de cada marcador
+    posible (0..max_goals por lado) para sacar P(gana)/P(empata)/P(pierde).
+
+    Devuelve dict: p_win, p_draw, p_loss, xpoints (= 3*p_win + p_draw)."""
+    xg_for = max(float(xg_for or 0), 0.0)
+    xg_against = max(float(xg_against or 0), 0.0)
+
+    p_win = p_draw = p_loss = 0.0
+    for gf in range(max_goals + 1):
+        pf = _poisson_pmf(gf, xg_for)
+        for ga in range(max_goals + 1):
+            p = pf * _poisson_pmf(ga, xg_against)
+            if gf > ga:
+                p_win += p
+            elif gf == ga:
+                p_draw += p
+            else:
+                p_loss += p
+
+    # Normaliza por la cola truncada en max_goals (residuo chico con xG de
+    # fútbol real, pero así las tres probabilidades siempre suman 1).
+    total = p_win + p_draw + p_loss
+    if total > 0:
+        p_win, p_draw, p_loss = p_win / total, p_draw / total, p_loss / total
+
+    return {
+        "p_win":  round(p_win, 4),
+        "p_draw": round(p_draw, 4),
+        "p_loss": round(p_loss, 4),
+        "xpoints": round(3 * p_win + p_draw, 3),
+    }
+
+
+def season_xpoints_table(season_df):
+    """A partir de build_season_table(), agrega xpoints por partido (vía
+    expected_points sobre chaco_xg/rival_xg) y el acumulado real vs. esperado
+    a lo largo de la temporada. Partidos sin xG (falta el shotmap) quedan con
+    xpoints NaN — no distorsionan el resto del acumulado porque
+    Series.cumsum() por default saltea los NaN (no resetea el acumulado)."""
+    df = season_df.copy()
+    if "chaco_xg" not in df.columns or "rival_xg" not in df.columns:
+        df["xpoints"] = np.nan
+        df["xpoints_cumsum"] = np.nan
+        return df
+
+    def _xp(row):
+        if pd.isna(row["chaco_xg"]) or pd.isna(row["rival_xg"]):
+            return np.nan
+        return expected_points(row["chaco_xg"], row["rival_xg"])["xpoints"]
+
+    df["xpoints"] = df.apply(_xp, axis=1)
+    df["xpoints_cumsum"] = df["xpoints"].cumsum()
+    return df
+
+
 # ─── Análisis de jugadores ────────────────────────────────────────────────────
 
 def player_stats_per_match(match_key, base_dir=None):
@@ -285,6 +356,94 @@ def most_used_players(season_player_df, top_n=15):
     ]
 
 
+# ─── Disponibilidad: refuerzos vs. jugadores de todo el año ──────────────────
+
+def player_availability(match_keys, base_dir=None):
+    """
+    Por cada jugador de Chaco: en qué partido apareció por primera vez y cuántos
+    minutos tuvo DISPONIBLES desde ese debut (90' por cada partido desde el
+    debut en adelante, incluido).
+
+    Existe para no castigar a los refuerzos. Un jugador que llegó en la fecha 19
+    nunca va a llegar a los 450'/600' que acumula un titular de todo el año,
+    pero puede haber jugado el 100% de lo que se jugó desde que llegó — y
+    entonces merece estar en los gráficos igual que un titular histórico.
+
+    Devuelve DataFrame ordenado por pct_disponible:
+      player, debut, fecha_debut, partidos_desde_debut, partidos_jugados,
+      minutos, minutos_disponibles, pct_disponible, es_incorporacion
+    """
+    base_dir = base_dir or config.season_data_dir()
+    dated = sorted(match_keys, key=get_match_date)
+    total = len(dated)
+
+    primera = {}     # player -> índice del partido de debut
+    minutos = {}     # player -> minutos acumulados
+    jugados = {}     # player -> partidos con minutos > 0
+    for idx, mk in enumerate(dated):
+        path = os.path.join(base_dir, mk, "lineups_clean.csv")
+        if not os.path.exists(path):
+            continue
+        lin = pd.read_csv(path)
+        side = "home" if is_home_match(mk) else "away"
+        for _, r in lin[lin["team_side"] == side].iterrows():
+            name = r.get("player_name")
+            if not isinstance(name, str) or not name:
+                continue
+            primera.setdefault(name, idx)
+            mins = pd.to_numeric(r.get("minutes_played"), errors="coerce")
+            mins = 0.0 if pd.isna(mins) else float(mins)
+            minutos[name] = minutos.get(name, 0.0) + mins
+            if mins > 0:
+                jugados[name] = jugados.get(name, 0) + 1
+
+    if not primera:
+        return pd.DataFrame()
+
+    rows = []
+    for name, idx in primera.items():
+        desde_debut = total - idx
+        disponibles = desde_debut * 90.0
+        mins = minutos.get(name, 0.0)
+        rows.append({
+            "player":                name,
+            "debut":                 dated[idx],
+            "fecha_debut":           get_match_date(dated[idx]),
+            "partidos_desde_debut":  desde_debut,
+            "partidos_jugados":      jugados.get(name, 0),
+            "minutos":               mins,
+            "minutos_disponibles":   disponibles,
+            "pct_disponible":        round(mins / disponibles * 100, 1) if disponibles else 0.0,
+            # "incorporación" = no estaba desde el arranque de la temporada
+            "es_incorporacion":      idx > 0,
+        })
+    return (pd.DataFrame(rows)
+            .sort_values(["pct_disponible", "minutos"], ascending=False)
+            .reset_index(drop=True))
+
+
+def relevant_players(availability, min_minutes=450, min_pct=45.0,
+                     min_minutes_reciente=180):
+    """
+    Set de nombres con muestra suficiente para los gráficos individuales
+    (pizzas, rating, calendario de carga, redes).
+
+    Un jugador entra si cumple CUALQUIERA de las dos condiciones:
+      a) acumuló `min_minutes` en la temporada  — el criterio de siempre; o
+      b) jugó al menos `min_pct`% de los minutos disponibles desde su debut,
+         con un piso de `min_minutes_reciente` para no colar a alguien que
+         entró dos veces.
+
+    La (b) es la que rescata a los refuerzos del mercado de mitad de año.
+    """
+    if availability is None or availability.empty:
+        return set()
+    por_total = availability["minutos"] >= min_minutes
+    por_ritmo = ((availability["pct_disponible"] >= min_pct) &
+                 (availability["minutos"] >= min_minutes_reciente))
+    return set(availability.loc[por_total | por_ritmo, "player"])
+
+
 # ─── Análisis de cambios ──────────────────────────────────────────────────────
 
 def substitution_analysis(match_keys, base_dir=None):
@@ -313,7 +472,7 @@ def substitution_analysis(match_keys, base_dir=None):
 
 # ─── Red de minutos compartidos ──────────────────────────────────────────────
 
-def shared_minutes_network(match_keys, base_dir, min_minutes=180):
+def shared_minutes_network(match_keys, base_dir, min_minutes=180, players=None):
     """
     Grafo de relaciones del plantel de Chaco: minutos que cada dupla compartió
     en cancha y qué tan bien le fue al equipo en esos minutos.
@@ -321,6 +480,11 @@ def shared_minutes_network(match_keys, base_dir, min_minutes=180):
     Intervalo en cancha de un jugador = [inicio, inicio+minutes_played], con
     inicio=substitute_in (NaN → 0, es titular). La diferencia de gol de una
     dupla = goles de Chaco menos del rival ocurridos mientras ambos estaban.
+
+    `players` (opcional): iterable de nombres que reemplaza al filtro por
+    min_minutes. Conviene pasarle el plantel con muestra (relevant_players):
+    bajar min_minutes para que entren los refuerzos también mete jugadores de
+    paso que quedan como nodos sueltos sin ninguna cuerda.
 
     Devuelve (nodes_df, edges_df):
       nodes_df: player_name, minutes (total temporada), matches
@@ -387,8 +551,11 @@ def shared_minutes_network(match_keys, base_dir, min_minutes=180):
     if nodes.empty:
         return nodes, pd.DataFrame(
             columns=["p1", "p2", "minutes_together", "goal_diff", "gd_per90"])
-    nodes = nodes[nodes["minutes"] >= min_minutes].sort_values(
-        "minutes", ascending=False).reset_index(drop=True)
+    if players is not None:
+        nodes = nodes[nodes["player_name"].isin(set(players))]
+    else:
+        nodes = nodes[nodes["minutes"] >= min_minutes]
+    nodes = nodes.sort_values("minutes", ascending=False).reset_index(drop=True)
     keep = set(nodes["player_name"])
 
     edges = [{"p1": a, "p2": b, "minutes_together": m, "goal_diff": pair_gd[(a, b)],
@@ -397,6 +564,90 @@ def shared_minutes_network(match_keys, base_dir, min_minutes=180):
     edges_df = (pd.DataFrame(edges).sort_values("minutes_together", ascending=False)
                 .reset_index(drop=True) if edges else pd.DataFrame(
                     columns=["p1", "p2", "minutes_together", "goal_diff", "gd_per90"]))
+    return nodes, edges_df
+
+
+# ─── Duplas asociativas de temporada (posición + volumen de pases) ───────────
+
+def pass_association_network(match_keys, base_dir, min_matches=5):
+    """
+    Duplas asociativas de la temporada: a diferencia de shared_minutes_network
+    (minutos juntos en cancha), esto mide QUÉ TAN CERCA jugaron y CUÁNTO
+    pasaron, partido a partido, usando average_positions_clean.csv +
+    lineups_clean.csv (posición promedio real y pases acertados reales de
+    SofaScore — mismo dato que plot_pass_association a nivel partido, acá
+    agregado a nivel temporada).
+
+    Por partido, para cada par de titulares de Chaco se calcula un puntaje =
+    volumen de pases combinado (sqrt(pases_a * pases_b)) ponderado por
+    cercanía (inverso de la distancia en cancha, 0-100 OPTA) — dos jugadores
+    que pasan mucho Y juegan cerca puntúan más que dos que pasan mucho pero
+    lejos (ej. arquero y 9). Se promedia sobre los partidos que jugaron
+    juntos como titulares.
+
+    Devuelve (nodes_df, edges_df):
+      nodes_df: player_name, passes (total temporada), matches (titular)
+      edges_df: p1, p2, matches_together, avg_score (asociación promedio
+                por partido), avg_combined_passes
+    """
+    from collections import defaultdict
+    node_passes = defaultdict(float)
+    node_matches = defaultdict(int)
+    pair_score = defaultdict(float)
+    pair_passes = defaultdict(float)
+    pair_matches = defaultdict(int)
+
+    for mk in match_keys:
+        mdir = os.path.join(base_dir, mk)
+        ap_path = os.path.join(mdir, "average_positions_clean.csv")
+        lp_path = os.path.join(mdir, "lineups_clean.csv")
+        if not (os.path.exists(ap_path) and os.path.exists(lp_path)):
+            continue
+        ap = pd.read_csv(ap_path)
+        lin = pd.read_csv(lp_path)
+        chaco_side = "home" if is_home_match(mk) else "away"
+
+        df = ap[ap["team_side"] == chaco_side].merge(
+            lin[["player_name", "is_starter", "accurate_passes"]],
+            on="player_name", how="left")
+        df = df[df["is_starter"] == True].reset_index(drop=True)
+        if df.empty:
+            continue
+        df["accurate_passes"] = pd.to_numeric(df["accurate_passes"], errors="coerce").fillna(0)
+
+        for _, r in df.iterrows():
+            node_passes[r["player_name"]] += float(r["accurate_passes"])
+            node_matches[r["player_name"]] += 1
+
+        pos = df[["average_x", "average_y"]].values
+        names = df["player_name"].tolist()
+        passes = df["accurate_passes"].values
+        n = len(df)
+        for i in range(n):
+            for j in range(i + 1, n):
+                dist = float(np.linalg.norm(pos[i] - pos[j]))
+                closeness = 1.0 / (1.0 + dist / 20.0)   # 20 OPTA ~ "cerca"
+                combined = float(np.sqrt(max(passes[i], 0) * max(passes[j], 0)))
+                key = tuple(sorted((names[i], names[j])))
+                pair_score[key] += combined * closeness
+                pair_passes[key] += combined
+                pair_matches[key] += 1
+
+    nodes = pd.DataFrame(
+        [{"player_name": n, "passes": node_passes[n], "matches": node_matches[n]}
+         for n in node_passes])
+    if nodes.empty:
+        return nodes, pd.DataFrame(
+            columns=["p1", "p2", "matches_together", "avg_score", "avg_combined_passes"])
+    nodes = nodes.sort_values("passes", ascending=False).reset_index(drop=True)
+
+    edges = [{"p1": a, "p2": b, "matches_together": pair_matches[(a, b)],
+              "avg_score": pair_score[(a, b)] / pair_matches[(a, b)],
+              "avg_combined_passes": pair_passes[(a, b)] / pair_matches[(a, b)]}
+             for (a, b) in pair_matches if pair_matches[(a, b)] >= min_matches]
+    edges_df = (pd.DataFrame(edges).sort_values("avg_score", ascending=False)
+                .reset_index(drop=True) if edges else pd.DataFrame(
+                    columns=["p1", "p2", "matches_together", "avg_score", "avg_combined_passes"]))
     return nodes, edges_df
 
 
@@ -456,16 +707,21 @@ def assists_network(match_keys, base_dir):
 
 # ─── Calendario de carga (minutos + descanso) ────────────────────────────────
 
-def load_calendar(match_keys, base_dir, top_n=16):
+def load_calendar(match_keys, base_dir, top_n=16, players=None):
     """
     Carga de minutos por jugador a lo largo del calendario + días de descanso
     entre partidos. Usa event_clean (fecha real del partido) y lineups_clean
     (minutos de Chaco).
 
+    `players` (opcional): iterable de nombres a mostrar. Si se pasa, reemplaza
+    al ranking por minutos totales de top_n — necesario para que los refuerzos
+    de mitad de año entren al calendario, que es justamente donde se ve cómo
+    cambió el reparto de minutos cuando llegaron.
+
     Devuelve (matrix_df, meta_df):
       matrix_df: índice = jugador, columnas = etiquetas de partido en orden,
                  valores = minutos jugados (0 si no jugó). Solo top_n jugadores
-                 con más minutos totales.
+                 con más minutos totales (o los de `players`).
       meta_df:   una fila por partido (label, date, opponent, venue, rest_days)
     """
     from datetime import datetime
@@ -510,7 +766,11 @@ def load_calendar(match_keys, base_dir, top_n=16):
     labels = meta_df["label"].tolist()
     matrix = pd.DataFrame(per_player).T.reindex(columns=labels).fillna(0.0)
     matrix["__total__"] = matrix.sum(axis=1)
-    matrix = matrix.sort_values("__total__", ascending=False).head(top_n)
+    matrix = matrix.sort_values("__total__", ascending=False)
+    if players is not None:
+        matrix = matrix[matrix.index.isin(set(players))]
+    else:
+        matrix = matrix.head(top_n)
     matrix = matrix.drop(columns="__total__")
     return matrix, meta_df
 
@@ -664,14 +924,21 @@ def xg_by_score_state(match_keys, base_dir):
 
 # ─── Toques en último tercio / área rival ────────────────────────────────────
 
-def final_third_touches(match_keys, base_dir, top_n=14, min_touches=40):
+def final_third_touches(match_keys, base_dir, top_n=14, min_touches=40,
+                        players=None):
     """
     Participación ofensiva por jugador de Chaco: toques totales y cuántos caen en
     el último tercio (x>66, coords OPTA 0-100) y dentro del área rival
     (x>83 y 21.1<y<78.9). No necesita datos de pases. Sale de player_heatmaps.
 
+    `players` (opcional): iterable de nombres al que restringir el resultado —
+    p.ej. el plantel con muestra suficiente (ver relevant_players), para que un
+    refuerzo no quede afuera solo por el ranking de top_n.
+
     Devuelve un DataFrame: player, touches, final_third, box, pct_final_third,
     ordenado por toques en el último tercio (desc), top_n jugadores.
+    Ojo: los toques son ACUMULADOS del año, así que un jugador que llegó a
+    mitad de temporada va a mostrar barras más cortas aunque participe mucho.
     """
     from collections import defaultdict
     tot = defaultdict(int)
@@ -696,9 +963,11 @@ def final_third_touches(match_keys, base_dir, top_n=14, min_touches=40):
             if x > 83 and 21.1 < y < 78.9:
                 box[name] += 1
 
+    allowed = set(players) if players is not None else None
     rows = [{"player": p, "touches": tot[p], "final_third": f3[p], "box": box[p],
              "pct_final_third": round(100 * f3[p] / tot[p], 1) if tot[p] else 0.0}
-            for p in tot if tot[p] >= min_touches]
+            for p in tot
+            if tot[p] >= min_touches and (allowed is None or p in allowed)]
     df = pd.DataFrame(rows)
     if df.empty:
         return df

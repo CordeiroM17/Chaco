@@ -205,6 +205,89 @@ def plot_average_positions_rival(df_avg_pos, df_lineup=None, is_home=True,
         match_label=match_label, save_path=save_path)
 
 
+# ─── Mapa de asociación (posición real + volumen de pases real) ──────────────
+
+def plot_pass_association(df_avg_pos, df_lineup, is_home=True, focus="chaco",
+                          team_label=None, match_label="", k_vecinos=3,
+                          save_path=None):
+    """
+    Formación con posición promedio REAL (SofaScore) + conexiones entre
+    compañeros cercanos, pesadas por el volumen de pases acertados de cada
+    uno. SofaScore no da el par actor→receptor de cada pase — esto NO es la
+    red de pases literal, es un mapa de asociación por cercanía + volumen,
+    con cobertura completa de los 11 titulares y datos 100% reales (sin
+    pasar por el tracking de video).
+    """
+    if df_avg_pos is None or df_avg_pos.empty or df_lineup is None or df_lineup.empty:
+        return None
+
+    side, es_chaco = _team_side_focus(is_home, focus)
+    color = ACCENT_COLOR if es_chaco else RIVAL_COLOR
+    team_label = team_label or ("Chaco For Ever" if es_chaco else "Rival")
+
+    df = df_avg_pos[df_avg_pos["team_side"] == side].copy()
+    if df.empty:
+        return None
+    df = df.merge(df_lineup[["player_name", "is_starter", "accurate_passes"]],
+                  on="player_name", how="left")
+    df = df[df["is_starter"] == True].reset_index(drop=True)
+    if df.empty:
+        return None
+    df["accurate_passes"] = pd.to_numeric(df["accurate_passes"], errors="coerce").fillna(0)
+
+    fig, ax = plt.subplots(figsize=(9, 12))
+    fig.patch.set_facecolor(BG_COLOR)
+    pitch = Pitch(pitch_type="opta", pitch_color=PITCH_BG, line_color=PITCH_LINE,
+                  linewidth=1.2)
+    pitch.draw(ax=ax)
+    ax.set_facecolor(PITCH_BG)
+
+    pos = df[["average_x", "average_y"]].values
+    n = len(df)
+    dist = np.linalg.norm(pos[:, None, :] - pos[None, :, :], axis=2)
+    np.fill_diagonal(dist, np.inf)
+    edges = set()
+    for i in range(n):
+        for j in np.argsort(dist[i])[:k_vecinos]:
+            edges.add((min(i, int(j)), max(i, int(j))))
+
+    max_pass = max(df["accurate_passes"].max(), 1)
+    for i, j in edges:
+        w = np.sqrt(df["accurate_passes"].iloc[i] * df["accurate_passes"].iloc[j]) / max_pass
+        pitch.lines(df["average_x"].iloc[i], df["average_y"].iloc[i],
+                    df["average_x"].iloc[j], df["average_y"].iloc[j],
+                    lw=0.8 + w * 5, color=MUTED_COLOR, alpha=0.35 + w * 0.45,
+                    zorder=1, ax=ax)
+
+    sizes = 260 + (df["accurate_passes"] / max_pass) * 700
+    pitch.scatter(df["average_x"], df["average_y"], s=sizes, c=color,
+                 edgecolors="white", linewidth=1.4, zorder=3, ax=ax)
+    for _, r in df.iterrows():
+        short = r["player_name"].split()[-1] if r["player_name"] else ""
+        pitch.text(r["average_x"], r["average_y"] + 4.2, short, ax=ax,
+                   color=TEXT_COLOR, fontsize=8, fontweight="bold",
+                   ha="center", va="bottom", zorder=6,
+                   bbox=dict(boxstyle="round,pad=0.15", fc=BG_COLOR, ec="none", alpha=0.7))
+
+    ax.set_title("Mapa de Asociación", color=TEXT_COLOR, fontsize=14,
+                 fontweight="bold", pad=8)
+
+    plt.tight_layout()
+    if save_path:
+        save_fig(fig, save_path)
+        return save_path
+    return fig
+
+
+def plot_pass_association_rival(df_avg_pos, df_lineup, is_home=True,
+                                rival_label="Rival", match_label="",
+                                k_vecinos=3, save_path=None):
+    """Atajo: plot_pass_association con focus='rival'."""
+    return plot_pass_association(df_avg_pos, df_lineup, is_home=is_home, focus="rival",
+                                 team_label=rival_label, match_label=match_label,
+                                 k_vecinos=k_vecinos, save_path=save_path)
+
+
 # ─── Grid de heatmaps ────────────────────────────────────────────────────────
 
 def plot_player_heatmaps_grid(df_heatmaps, players=None, n=6, is_home=True,
@@ -633,6 +716,61 @@ def plot_action_radius_rival(df_heatmaps, df_lineup=None, is_home=True,
                               match_label=match_label, max_players=max_players,
                               save_path=save_path, focus="rival",
                               team_label=rival_label)
+
+
+# ─── xG acumulado (worm/step chart) ──────────────────────────────────────────
+
+def plot_xg_cumulative(df_cum, rival_label="Rival", match_label="", save_path=None):
+    """
+    "Carrera de xG": xG acumulado de ambos equipos minuto a minuto, en
+    escalón (sube en el instante exacto de cada remate). De
+    analysis.post_match.xg_cumulative — distinto de plot_xg_phases (que
+    suma en bloques fijos de 15').
+    """
+    if df_cum is None or df_cum.empty:
+        return None
+
+    fig, ax = plt.subplots(figsize=(12, 5))
+    fig.patch.set_facecolor(BG_COLOR)
+    ax.set_facecolor(BG_COLOR)
+
+    x = df_cum["minute"]
+    ax.step(x, df_cum["chaco_xg_cum"], where="post", color=ACCENT_COLOR,
+            linewidth=2.5, label="Chaco For Ever", zorder=3)
+    ax.step(x, df_cum["rival_xg_cum"], where="post", color=RIVAL_COLOR,
+            linewidth=2.5, label=rival_label, zorder=3)
+    ax.fill_between(x, df_cum["chaco_xg_cum"], step="post", alpha=0.10, color=ACCENT_COLOR)
+    ax.fill_between(x, df_cum["rival_xg_cum"], step="post", alpha=0.10, color=RIVAL_COLOR)
+
+    end_c = df_cum["chaco_xg_cum"].iloc[-1]
+    end_r = df_cum["rival_xg_cum"].iloc[-1]
+    ax.annotate(f"{end_c:.2f}", xy=(x.iloc[-1], end_c), xytext=(6, 0),
+                textcoords="offset points", va="center", fontsize=10,
+                color=ACCENT_COLOR, fontweight="bold")
+    ax.annotate(f"{end_r:.2f}", xy=(x.iloc[-1], end_r), xytext=(6, 0),
+                textcoords="offset points", va="center", fontsize=10,
+                color=RIVAL_COLOR, fontweight="bold")
+
+    if x.max() > 45:
+        ax.axvline(45, color=MUTED_COLOR, linewidth=1, linestyle=":", alpha=0.8, label="HT")
+
+    ax.set_xlim(0, max(90, x.max()))
+    ax.set_ylim(bottom=0)
+    ax.set_xlabel("Minuto", color=TEXT_COLOR, fontsize=10)
+    ax.set_ylabel("xG acumulado", color=TEXT_COLOR, fontsize=10)
+    ax.set_title(f"xG Acumulado{' – ' + match_label if match_label else ''}",
+                 color=TEXT_COLOR, fontsize=13, fontweight="bold")
+    ax.tick_params(colors=TEXT_COLOR)
+    ax.grid(axis="y", color=GRID_COLOR, linewidth=0.8, zorder=0)
+    for spine in ax.spines.values():
+        spine.set_visible(False)
+    ax.legend(facecolor=BG_COLOR, labelcolor=TEXT_COLOR, fontsize=9, loc="upper left")
+
+    plt.tight_layout()
+    if save_path:
+        save_fig(fig, save_path)
+        return save_path
+    return fig
 
 
 # ─── xG por tramos ────────────────────────────────────────────────────────────

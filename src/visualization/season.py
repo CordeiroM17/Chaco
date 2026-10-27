@@ -534,6 +534,60 @@ def plot_cumulative_xg_vs_goals(season_df, save_path=None):
     return fig
 
 
+def plot_xpoints_season(season_xp_df, save_path=None, team_label="Chaco For Ever"):
+    """Puntos reales acumulados vs. puntos esperados (xPoints) acumulados,
+    fecha a fecha — de analysis.season.season_xpoints_table(). Distinto de
+    plot_cumulative_xg_vs_goals (que compara goles, no puntos): acá el eje es
+    directamente "cuánto merecía sacar el equipo según su xG de cada partido"."""
+    if "xpoints_cumsum" not in season_xp_df.columns:
+        return None
+    df = season_xp_df.dropna(subset=["xpoints_cumsum"]).reset_index(drop=True)
+    if df.empty:
+        return None
+
+    fig, ax = plt.subplots(figsize=(14, 5))
+    _fig_style(fig)
+    ax.set_facecolor(BG_COLOR)
+    x = range(1, len(df) + 1)
+
+    ax.plot(x, df["points_cumsum"], color=ACCENT_COLOR, linewidth=2.5,
+            marker="o", markersize=5, label="Puntos reales", zorder=3)
+    ax.plot(x, df["xpoints_cumsum"], color=TEXT_COLOR, linewidth=1.8,
+            linestyle="--", alpha=0.8, label="Puntos esperados (xPoints)", zorder=3)
+    ax.fill_between(x, df["points_cumsum"], df["xpoints_cumsum"],
+                     where=(df["points_cumsum"] >= df["xpoints_cumsum"]),
+                     color="#2ca02c", alpha=0.12, interpolate=True)
+    ax.fill_between(x, df["points_cumsum"], df["xpoints_cumsum"],
+                     where=(df["points_cumsum"] < df["xpoints_cumsum"]),
+                     color=ACCENT_COLOR, alpha=0.12, interpolate=True)
+
+    diff = df["points_cumsum"].iloc[-1] - df["xpoints_cumsum"].iloc[-1]
+    signo = "+" if diff >= 0 else ""
+    color_diff = "#2ca02c" if diff >= 0 else ACCENT_COLOR
+    ax.annotate(f"{signo}{diff:.1f} pts vs. lo esperado",
+                xy=(x[-1], df["points_cumsum"].iloc[-1]), xytext=(-100, 15),
+                textcoords="offset points", fontsize=9, color=color_diff,
+                fontweight="bold",
+                arrowprops=dict(arrowstyle="->", color=color_diff, lw=1))
+
+    ax.set_xlabel("Jornada", color=TEXT_COLOR, fontsize=11)
+    ax.set_ylabel("Puntos acumulados", color=TEXT_COLOR, fontsize=11)
+    ax.set_title(f"Puntos Reales vs. Esperados (xPoints) – {team_label}",
+                 fontsize=14, color=TEXT_COLOR, fontweight="bold")
+    ax.tick_params(colors=TEXT_COLOR)
+    ax.grid(axis="y", color=GRID_COLOR, linewidth=0.8, zorder=0)
+    ax.spines["bottom"].set_color(MUTED_COLOR)
+    ax.spines["left"].set_color(MUTED_COLOR)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.legend(facecolor=BG_COLOR, labelcolor=TEXT_COLOR, fontsize=10, loc="upper left")
+    plt.tight_layout()
+    if save_path:
+        save_fig(fig, save_path)
+        return save_path
+    return fig
+
+
 def plot_xg_season(season_df, save_path=None, team_label="Chaco For Ever"):
     if "chaco_xg" not in season_df.columns:
         return None
@@ -712,6 +766,108 @@ def plot_shared_minutes_network(nodes_df, edges_df, season="", min_edge_minutes=
     fig.text(0.5, 0.03, f"Nodo ∝ minutos jugados  ·  se muestran solo las "
              f"{len(ed)} duplas con más minutos juntos (cuerda ∝ minutos)  ·  "
              "color = rinde la dupla (verde + / rojo −)",
+             ha="center", fontsize=9, color=MUTED_COLOR, style="italic")
+    plt.tight_layout(rect=(0, 0.04, 1, 1))
+    if save_path:
+        save_fig(fig, save_path)
+        return save_path
+    return fig
+
+
+# ─── Duplas asociativas (posición + volumen de pases) ────────────────────────
+
+def plot_pass_association_network(nodes_df, edges_df, season="", min_edge_matches=5,
+                                   top_edges=22, title=None, save_path=None):
+    """
+    Mismo estilo circular que plot_shared_minutes_network, pero la dupla se
+    arma por CERCANÍA EN CANCHA + VOLUMEN DE PASES (avg_score de
+    analysis.season.pass_association_network), no por minutos compartidos.
+    Nodo ∝ pases acertados totales de la temporada; grosor de la cuerda ∝
+    fuerza de la asociación; color = volumen de pases combinado promedio
+    (más oscuro = pasan más entre los dos).
+    """
+    import networkx as nx
+
+    if nodes_df is None or nodes_df.empty:
+        return None
+
+    passes = dict(zip(nodes_df["player_name"], nodes_df["passes"]))
+    by_passes = list(nodes_df.sort_values("passes", ascending=False)["player_name"])
+
+    ed = edges_df
+    if ed is not None and not ed.empty:
+        ed = ed[(ed["matches_together"] >= min_edge_matches)
+                & ed["p1"].isin(passes) & ed["p2"].isin(passes)]
+        ed = ed.sort_values("avg_score", ascending=False).head(top_edges)
+    else:
+        ed = pd.DataFrame(columns=["p1", "p2", "matches_together", "avg_score",
+                                    "avg_combined_passes"])
+
+    connected = [p for p in by_passes if p in set(ed["p1"]) | set(ed["p2"])]
+    rest = [p for p in by_passes if p not in connected]
+    n = len(by_passes)
+    order = [None] * n
+    if connected:
+        for k, p in enumerate(connected):
+            order[round(k * n / len(connected)) % n] = p
+    ri = iter(rest)
+    for i in range(n):
+        if order[i] is None:
+            order[i] = next(ri)
+
+    G = nx.Graph()
+    G.add_nodes_from(order)
+    for _, r in ed.iterrows():
+        G.add_edge(r["p1"], r["p2"], score=r["avg_score"], passes=r["avg_combined_passes"])
+
+    fig, ax = plt.subplots(figsize=(13, 12))
+    fig.patch.set_facecolor(BG_COLOR)
+    ax.set_facecolor(BG_COLOR)
+    ax.axis("off")
+
+    n = len(order)
+    ang = {p: (np.pi / 2 - 2 * np.pi * i / n) for i, p in enumerate(order)}
+    pos = {p: (np.cos(a), np.sin(a)) for p, a in ang.items()}
+    maxpass = max(passes.values()) or 1
+
+    if G.number_of_edges():
+        e_score = np.array([G[u][v]["score"] for u, v in G.edges()], dtype=float)
+        e_pass = np.array([G[u][v]["passes"] for u, v in G.edges()], dtype=float)
+        widths = 1.2 + 6.0 * (e_score / (e_score.max() or 1))
+        cmap = plt.get_cmap("YlOrRd")
+        norm = plt.Normalize(vmin=0, vmax=e_pass.max() or 1)
+        nx.draw_networkx_edges(
+            G, pos, ax=ax, width=widths,
+            edge_color=[cmap(norm(p)) for p in e_pass], alpha=0.85,
+            connectionstyle="arc3,rad=0.12")
+
+    node_sizes = [500 + 3000 * (passes[p] / maxpass) for p in order]
+    nx.draw_networkx_nodes(G, pos, ax=ax, nodelist=order, node_size=node_sizes,
+                           node_color=ACCENT_COLOR, edgecolors="white",
+                           linewidths=1.8, alpha=0.97)
+
+    for p in order:
+        a = ang[p]
+        x, y = 1.14 * np.cos(a), 1.14 * np.sin(a)
+        ha = "left" if np.cos(a) > 0.1 else ("right" if np.cos(a) < -0.1 else "center")
+        ax.text(x, y, p.split()[-1], fontsize=9.5, fontweight="bold",
+                color=TEXT_COLOR, ha=ha, va="center")
+
+    ax.set_xlim(-1.45, 1.45)
+    ax.set_ylim(-1.3, 1.3)
+
+    if G.number_of_edges():
+        sm = plt.cm.ScalarMappable(norm=norm, cmap=cmap)
+        cbar = fig.colorbar(sm, ax=ax, fraction=0.03, pad=0.02, shrink=0.6)
+        cbar.set_label("Pases combinados promedio", color=TEXT_COLOR, fontsize=9)
+        cbar.ax.tick_params(colors=TEXT_COLOR)
+
+    ax.set_title(title or f"Duplas Asociativas – Chaco For Ever"
+                 f"{'  ' + str(season) if season else ''}",
+                 color=TEXT_COLOR, fontsize=15, fontweight="bold", pad=16)
+    fig.text(0.5, 0.03, f"Nodo ∝ pases acertados de la temporada  ·  se muestran solo las "
+             f"{len(ed)} duplas más asociadas (cuerda ∝ cercanía × pases)  ·  "
+             "color = volumen de pases combinado",
              ha="center", fontsize=9, color=MUTED_COLOR, style="italic")
     plt.tight_layout(rect=(0, 0.04, 1, 1))
     if save_path:

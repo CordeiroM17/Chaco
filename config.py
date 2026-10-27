@@ -63,6 +63,8 @@ INDEX_FILE = os.path.join(_ROOT, "data", "matches_index.csv")
 # Templates de datos — usar con .format(season=...) o la función helper
 _RIVALS_DIR    = os.path.join(_ROOT, "data", "temporadas", "{season}", "rivals")
 _STANDINGS_FILE = os.path.join(_ROOT, "data", "temporadas", "{season}", "standings.csv")
+_STANDINGS_ZONA_B_FILE = os.path.join(_ROOT, "data", "temporadas", "{season}", "standings_zona_b.csv")
+_FIXTURE_FILE = os.path.join(_ROOT, "data", "temporadas", "{season}", "fixture.csv")
 
 # Templates de outputs — TODO anidado por temporada, espejando data/temporadas/{season}/
 _SEASON_PLOTS_DIR   = os.path.join(_ROOT, "outputs", "temporadas", "{season}", "graficos")
@@ -89,17 +91,17 @@ RIVALS_2026 = {
     "deportivo_moron":           {"id": 93109,  "name": "Deportivo Morón"},
     "estudiantes_caseros":       {"id": 93107,  "name": "Estudiantes de Buenos Aires"},
     "ferro_carril_oeste":        {"id": 36841,  "name": "Club Ferro Carril Oeste"},
-    "gimnasia_de_jujuy":         {"id": 5292,   "name": "Gimnasia Jujuy"},
+    "gimnasia_jujuy":            {"id": 5292,   "name": "Gimnasia Jujuy"},
     "godoy_cruz":                {"id": 6074,   "name": "Godoy Cruz"},
     "los_andes":                 {"id": 112497, "name": "Los Andes"},
-    "mitre":                     {"id": 255425, "name": "CA Mitre"},
+    "club_mitre":                {"id": 255425, "name": "CA Mitre"},
     "racing_de_cordoba":         {"id": 273657, "name": "Racing de Córdoba"},
     "san_miguel":                {"id": 264945, "name": "San Miguel"},
     "san_telmo":                 {"id": 213361, "name": "San Telmo"},
 }
 
-# Rivales que solo aparecen en 2025: sus slugs son distintos (ej. 'club_mitre',
-# 'gimnasia_jujuy'), así que conviven con los de 2026 sin pisarse.
+# Rivales de 2025. Un mismo club usa el MISMO slug todas las temporadas
+# (ej. 'club_mitre', 'gimnasia_jujuy'): si repite, aparece en los dos dicts.
 RIVALS_2025 = {
     "agropecuario":              {"id": 265787, "name": "Agropecuario Argentino"},
     "chacarita":                 {"id": 3214,   "name": "Club Atlético Chacarita Juniors"},
@@ -111,11 +113,125 @@ RIVALS_2025 = {
     "nueva_chicago":             {"id": 3200,   "name": "Nueva Chicago"},
     "talleres_remedios":         {"id": 201162, "name": "Talleres Remedios de Escalada"},
     "temperley":                 {"id": 112499, "name": "Temperley"},
+    # Zona A 2025 que no repitió en 2026 (no fueron rivales de Chaco).
+    "alvarado":                  {"id": 273715, "name": "Alvarado"},
+    "arsenal_de_sarandi":        {"id": 3221,   "name": "Arsenal de Sarandí"},
 }
 
 # Lookup único por slug: el pipeline resuelve el rival por el match_key, sin
 # importar la temporada. 2026 pisa a 2025 si algún slug coincidiera.
 RIVALS = {**RIVALS_2025, **RIVALS_2026}
+
+# Los 18 equipos de Zona B 2026 (misma Primera Nacional, mismo
+# UNIQUE_TOURNAMENT_ID=703 — está en standings[1] del endpoint de posiciones,
+# pero standings_scraper.fetch_standings solo lee standings[0]).
+# 5 de estos 18 ya existían en RIVALS_2025/2026 bajo otro slug (mismo id de
+# SofaScore): se reusan esas claves para no duplicar la carpeta de datos.
+RIVALS_ZONA_B_2026 = {
+    "gimnasia_jujuy":       RIVALS_2026["gimnasia_jujuy"],      # id 5292
+    "tristan_suarez":       {"id": 93513,  "name": "Tristán Suárez"},
+    "temperley":            RIVALS_2025["temperley"],            # id 112499
+    "atlanta":              {"id": 53799,  "name": "Atlanta"},
+    "ferrocarril_midland":  {"id": 270344, "name": "Ferrocarril Midland"},
+    "deportivo_maipu":      {"id": 213042, "name": "Deportivo Maipú"},
+    "gimnasia_tiro_salta":  {"id": 222126, "name": "Gimnasia y Tiro de Salta"},
+    "atletico_rafaela":     {"id": 34976,  "name": "Atlético de Rafaela"},
+    "san_martin_tucuman":   {"id": 23950,  "name": "San Martín de Tucumán"},
+    "colegiales":           {"id": 112493, "name": "Colegiales"},
+    "almagro":              {"id": 4938,   "name": "Almagro"},
+    "san_martin_san_juan":  {"id": 7772,   "name": "San Martín de San Juan"},
+    "chacarita":            RIVALS_2025["chacarita"],            # id 3214
+    "quilmes":              {"id": 4936,   "name": "Quilmes Atlético Club"},
+    "patronato":            {"id": 43741,  "name": "Patronato"},
+    "agropecuario":         RIVALS_2025["agropecuario"],         # id 265787
+    "guemes":               {"id": 224646, "name": "Güemes"},
+    "nueva_chicago":        RIVALS_2025["nueva_chicago"],        # id 3200
+}
+
+# RIVALS queda con Zona A + Zona B: así scrape_rival_recent() sirve para
+# cualquier equipo de la Primera Nacional sin importar la zona.
+RIVALS.update(RIVALS_ZONA_B_2026)
+
+# ─── Registro único de equipos (team_id → slug canónico) ────────────────────
+# Un club tiene UN slug para todas las temporadas: el de la carpeta en
+# rivals/ y el que va en los match_keys (de Chaco y de los rivales). Antes el
+# scraper de rivales armaba el match_key con el nombre de SofaScore cortado a
+# 25 letras ('club_atletico_colon', 'estudiantes_de_buenos_air', 'g�emes'), y
+# el mismo club quedaba con un nombre distinto en cada lado.
+EQUIPOS = {CHACO_TEAM_ID: {"slug": CHACO_SLUG.replace("-", "_"),
+                           "name": "Chaco For Ever"}}
+for _slug, _info in RIVALS.items():
+    EQUIPOS.setdefault(_info["id"], {"slug": _slug, "name": _info["name"]})
+
+
+def slugify_equipo(nombre):
+    """Slug a partir de un nombre de SofaScore, para equipos que todavía no
+    están en EQUIPOS (temporadas viejas). Saca todos los acentos (ü incluida)
+    y no corta el largo."""
+    import re
+    import unicodedata
+    s = unicodedata.normalize("NFKD", str(nombre or ""))
+    s = "".join(c for c in s if not unicodedata.combining(c)).lower()
+    return re.sub(r"[^a-z0-9]+", "_", s).strip("_") or "desconocido"
+
+
+def slug_de(team_id, nombre=None):
+    """Slug canónico del equipo. Si el team_id no está registrado, cae al
+    nombre normalizado: conviene sumarlo a RIVALS_* para fijarlo."""
+    try:
+        info = EQUIPOS.get(int(team_id))
+    except (TypeError, ValueError):
+        info = None
+    return info["slug"] if info else slugify_equipo(nombre)
+
+# ─── Liga Profesional Argentina (primera división — torneo APARTE de la
+# Primera Nacional donde juega Chaco, no comparte tournament_id ni equipos
+# necesariamente) ──────────────────────────────────────────────────────────
+# Formato 2026: Apertura + Clausura, cada uno con Zona A/B de 15 equipos,
+# más tablas "Anual 2026" (30, todos contra todos acumulado) y "Promedios
+# 2026" (30, la que define descenso). Los 6 grupos viven bajo un único
+# season_id — no hace falta un season_id distinto por etapa.
+UNIQUE_TOURNAMENT_ID_LPF = 155
+SEASON_IDS_LPF = {
+    "2026": 87913,   # "Primera LPF 2026"
+}
+
+# Los 30 equipos de la Liga Profesional 2026 (tabla "Anual 2026").
+# Registro separado de RIVALS: aunque algún id coincida con un ex-rival de
+# Primera Nacional (ascensos/descensos entre temporadas), los datos de LPF
+# viven en su propio árbol (lpf_team_dir), sin pisar nada de Chaco.
+LPF_TEAMS_2026 = {
+    "independiente_rivadavia": {"id": 36842,  "name": "Independiente Rivadavia"},
+    "estudiantes_la_plata":    {"id": 3206,   "name": "Estudiantes de La Plata"},
+    "boca_juniors":            {"id": 3202,   "name": "Boca Juniors"},
+    "river_plate":             {"id": 3211,   "name": "River Plate"},
+    "argentinos_juniors":      {"id": 3216,   "name": "Argentinos Juniors"},
+    "velez":                   {"id": 3208,   "name": "Vélez Sarsfield"},
+    "rosario_central":         {"id": 3217,   "name": "Rosario Central"},
+    "talleres":                {"id": 3210,   "name": "CA Talleres"},
+    "belgrano":                {"id": 3203,   "name": "Club Atlético Belgrano"},
+    "gimnasia_la_plata":       {"id": 3205,   "name": "Gimnasia y Esgrima"},
+    "independiente":           {"id": 3209,   "name": "CA Independiente"},
+    "lanus":                   {"id": 3218,   "name": "CA Lanús"},
+    "huracan":                 {"id": 7629,   "name": "Huracán"},
+    "san_lorenzo":             {"id": 3201,   "name": "San Lorenzo"},
+    "union_santa_fe":          {"id": 3204,   "name": "Club Atlético Unión de Santa Fe"},
+    "racing_club":             {"id": 3215,   "name": "Racing Club"},
+    "instituto":               {"id": 4937,   "name": "Instituto De Córdoba"},
+    "barracas_central":        {"id": 65668,  "name": "Barracas Central"},
+    "tigre":                   {"id": 7628,   "name": "Tigre"},
+    "defensa_y_justicia":      {"id": 36839,  "name": "Defensa y Justicia"},
+    "sarmiento":               {"id": 42338,  "name": "Sarmiento"},
+    "gimnasia_mendoza":        {"id": 188441, "name": "Gimnasia y Esgrima Mendoza"},
+    "banfield":                {"id": 3219,   "name": "Banfield"},
+    "platense":                {"id": 36837,  "name": "Club Atlético Platense"},
+    "central_cordoba":         {"id": 65676,  "name": "Central Córdoba"},
+    "newells":                 {"id": 3212,   "name": "Newell's Old Boys"},
+    "atletico_tucuman":        {"id": 36833,  "name": "Atlético Tucumán"},
+    "deportivo_riestra":       {"id": 189723, "name": "Deportivo Riestra"},
+    "aldosivi":                {"id": 36836,  "name": "Aldosivi"},
+    "estudiantes_rio_cuarto":  {"id": 266694, "name": "Estudiantes de Río Cuarto"},
+}
 
 # ─── Jugadores que se fueron del club ────────────────────────────────────────
 # Poné acá (uno por línea, entre comillas) a los jugadores de Chaco que dejaron
@@ -129,14 +245,71 @@ RIVALS = {**RIVALS_2025, **RIVALS_2026}
 # Si un jugador vuelve, borralo (o comentalo con #) de esta lista y vuelve a
 # aparecer en todos lados automáticamente.
 JUGADORES_FUERA = [
-    # "G. Pacheco",
-    # "L. Marinucci",
+    "R. Zules",
+    "L. Marinucci",
+    "I. Enriquez",
+    "M. Noble"
 ]
 
 
 def jugadores_fuera():
     """Set en minúsculas de los jugadores dados de baja (para comparar)."""
     return {n.strip().lower() for n in JUGADORES_FUERA if n and n.strip()}
+
+
+# ─── Corrección de identidad: SofaScore mezcla el bio de "G. Pacheco" ───────
+# El delantero de Chaco For Ever (player_id 83700 en SofaScore, el que juega
+# todos los partidos y va a las estadísticas de todos nuestros informes) es en
+# realidad Ezequiel Pacheco (23 años, nacido el 16/12/2002, 1.90m). SofaScore
+# le carga por error el bio de OTRO jugador homónimo que no juega en Chaco:
+# Germán Ezequiel Pacheco González (35 años, nacido el 19/05/1991, 1.76m,
+# sofascore id 2468554 es el perfil correcto de Ezequiel).
+#
+# Esto NO afecta los datos DENTRO del partido (goles, pases, minutos, tarjetas:
+# esos SÍ son del jugador real, solo el bio está mal cargado). El único lugar
+# donde el error se nota es en scouting (edad, nombre completo), así que la
+# corrección se aplica ahí nomás — ver src/analysis/scouting.py:_stats_del_raw.
+CORRECCIONES_BIO_JUGADORES = {
+    83700: {
+        "nombre_completo": "Ezequiel Pacheco",
+        "nacimiento": 1039996800,  # 16/12/2002 UTC
+        "altura": 190,
+    },
+}
+
+# ─── Jugadores con dos player_id en SofaScore ───────────────────────────────
+# SofaScore a veces le crea un perfil nuevo a un jugador que ya tenía uno (o
+# fusiona dos perfiles), y el mismo partido scrapeado dos veces trae ids
+# distintos. La base de jugadores (src/jugadores) reemplaza cada id duplicado
+# por el real al leer los partidos. Candidatos para revisar a mano:
+#     from src.jugadores import construir as C; C.posibles_duplicados()
+# Formato: {id_duplicado: id_real}. Solo cargar los confirmados (misma
+# persona: mismo nombre completo y fecha de nacimiento compatible).
+# Criterio para confirmar (2026-10-27): mismo equipo, nunca juntos en cancha,
+# un id reemplaza al otro en el tiempo, y mismo nacimiento o mismo dorsal y
+# puesto. Se unifica en el id que SofaScore usa ahora (o el de más historia).
+ALIAS_JUGADORES = {
+    83700:   2468554,   # E. Pacheco (Chaco): 83700 tenía la bio de un homónimo
+    2159514: 2484722,   # J. Bustos (Almagro 2026): mismo nacimiento y dorsal
+    1087036: 1183703,   # M. González (Los Andes): 1183703 es su id de 2025
+    1598435: 1627979,   # L. Pascual (Almirante 2026): dorsal 10, cambio el 26/9
+    2159501: 1388632,   # J. Camaño (Midland 2026): dorsal 8, cambio el 7/8
+    2048159: 1184980,   # M. D. Echeverría (Temperley 2026): dorsal 9, cambio el 6/9
+    941488:  2087705,   # L. Rodríguez (Central Norte 2025): arquero, dorsal 1
+    # Evidencia de shotmap: en un mismo partido el shotmap y el lineup le dan
+    # ids distintos al mismo jugador (mismo equipo, nombre y nacimiento). Se
+    # unifica en el id con más partidos.
+    2047512: 1217999,   # T. Silva (Maipú)
+    1819575: 1901985,   # R. Juárez (Defensores Unidos 2025)
+    2059699: 1546505,   # S. Villalba (Almirante / Chaco)
+    1525748: 1605509,   # N. Medina (Atlanta 2025)
+    2118524: 1394198,   # J. Barolín (Patronato)
+    2060467: 941539,    # G. Pugliese (Defensores de Belgrano / Güemes)
+    1654537: 1199249,   # T. Rambert (Los Andes / Ciudad de Bolívar)
+    2054529: 1875390,   # R. Sosa (San Telmo / Atlanta)
+    1887616: 1485593,   # R. Rodríguez (Estudiantes de Caseros)
+    1904638: 2437593,   # T. Jerez (San Miguel)
+}
 
 
 def excluir_jugadores_fuera(df, col="player_name"):
@@ -159,48 +332,39 @@ def excluir_jugadores_fuera(df, col="player_name"):
 
 # ─── Scraping ────────────────────────────────────────────────────────────────
 
-MIN_DELAY          = 6    # segundos entre requests
-MAX_DELAY          = 12
+MIN_DELAY          = 4    # segundos entre partidos/equipos (bajado de 6-12s el 2026-08-05
+MAX_DELAY          = 8    # para acelerar la corrida overnight de Zona B + LPF)
+MIN_DELAY_EP       = 1.5  # segundos entre endpoints del MISMO partido (event, statistics,
+MAX_DELAY_EP       = 3.0  # lineups, ...) y entre requests de heatmap. Más corto que el
+                          # delay entre partidos: son requests a la misma /event/{id}.
 RIVAL_LAST_MATCHES = 3    # mínimo de partidos para considerar "ya scrapeado" un rival
                           # (el scraping en sí baja TODOS los partidos de la temporada,
                           # no solo estos — ver rivals_scraper.scrape_rival_recent)
 
-# ─── Pipeline de video (Fase B) ──────────────────────────────────────────────
+# ─── Modelo de la tabla (Dixon-Coles + Monte Carlo) ──────────────────────────
+# Hiperparámetros elegidos por backtesting con origen móvil (cortes en las
+# fechas 14, 16, 18, 20 y 22 de 2026), no a ojo. Ver src/analysis/backtest.py
+# y EXPLICACION_montecarlo.md.
 
-MODELS_DIR = os.path.join(_ROOT, "models")
-
-# Backend de modelos:
-#   "roboflow" → paquete `inference`, descarga los modelos con la API key (recomendado)
-#   "local"    → pesos .pt en MODELS_DIR (entrenados aparte)
-VIDEO_MODEL_BACKEND = "roboflow"
-
-# Modelos en Roboflow Universe (backend "roboflow").
-# El de jugadores ya incluye la pelota como clase 0, así que con player+pitch
-# alcanza. El de pelota es un refinamiento opcional.
-# Si una versión deja de existir, ajustar el número acá.
-ROBOFLOW_MODELS = {
-    "player_detection": "football-players-detection-3zvbc/12",
-    "pitch_detection":  "football-field-detection-f07vi/15",
-    "ball_detection":   "football-ball-detection-rejhg/4",   # opcional
-}
-
-# Pesos locales (backend "local").
-VIDEO_MODELS = {
-    "player_detection": os.path.join(MODELS_DIR, "football-player-detection.pt"),
-    "pitch_detection":  os.path.join(MODELS_DIR, "football-pitch-detection.pt"),
-    "ball_detection":   os.path.join(MODELS_DIR, "football-ball-detection.pt"),
-}
-
-VIDEO_EXTENSIONS = (".mp4", ".mkv", ".avi", ".mov")
-
-# Frames por segundo a procesar (el video corre a ~25-30; muestrear baja el costo)
-VIDEO_SAMPLE_FPS = 5
-
-
-def roboflow_api_key():
-    """API key de Roboflow desde la variable de entorno ROBOFLOW_API_KEY.
-    En un notebook: os.environ['ROBOFLOW_API_KEY'] = 'tu_key' antes de procesar."""
-    return os.environ.get("ROBOFLOW_API_KEY", "").strip()
+DC_XI        = 0.0   # decaimiento temporal por día del ajuste: exp(-XI*días).
+                     # 0 = todos los partidos de la temporada pesan igual.
+                     # El backtest no encuentra ninguna ganancia en ponderar
+                     # por recencia (la curva es plana entre 0 y 0.003/día, y
+                     # empeora de ahí en adelante). El modelo anterior usaba
+                     # medio-vida de 6 PARTIDOS (~0.0165/día): reaccionaba a
+                     # las rachas mucho más de lo que la predicción justifica.
+DC_W_XG      = 0.8   # peso del xG en el rating; los goles observados pesan
+                     # 0.2. Antes estaba en 0.4 por un t≈1 sobre log-loss,
+                     # pero ese test estaba SIN parear. Pareando por corte
+                     # (mismo corte, misma semilla, misma ventana), 0.8 le
+                     # gana a 0.4 en 6/6 cortes en log-loss (t=2.72, p=0.042)
+                     # y RPS, y en 30/30 corridas en MAE de puntos de la
+                     # proyección (t=11.7). Ver backtest.position_backtest().
+                     # Ojo: w_xg NO borra los goles — los partidos sin xG
+                     # (18 de 453) mantienen peso completo de goles, y ρ/τ se
+                     # estima SIEMPRE con goles reales. La escala de goles
+                     # también se calibra contra goles reales (`level`).
+DC_MAX_GOALS = 12    # techo de la grilla de resultados exactos por partido
 
 # ─── Informes narrativos (LLM) ──────────────────────────────────────────────
 # Proveedor del modelo de lenguaje para los informes:
@@ -263,6 +427,37 @@ def rival_plots_dir(rival_slug, season=None):
 def standings_file(season=None):
     return _STANDINGS_FILE.format(season=season or CURRENT_SEASON)
 
+def standings_zona_b_file(season=None):
+    return _STANDINGS_ZONA_B_FILE.format(season=season or CURRENT_SEASON)
+
+def fixture_file(season=None):
+    return _FIXTURE_FILE.format(season=season or CURRENT_SEASON)
+
+# ─── Liga Profesional Argentina — rutas (árbol separado de temporadas/) ──────
+_LPF_TEAM_DIR      = os.path.join(_ROOT, "data", "liga_profesional", "{season}", "equipos", "{slug}")
+_LPF_STANDINGS_DIR = os.path.join(_ROOT, "data", "liga_profesional", "{season}", "standings")
+_LPF_FIXTURE_FILE  = os.path.join(_ROOT, "data", "liga_profesional", "{season}", "fixture.csv")
+_LPF_OUTPUTS_DIR   = os.path.join(_ROOT, "outputs", "liga_profesional", "{season}")
+
+def lpf_team_dir(slug, season=None):
+    """Datos scrapeados de un equipo de LPF: data/liga_profesional/{season}/equipos/{slug}/"""
+    return _LPF_TEAM_DIR.format(season=season or CURRENT_SEASON, slug=slug)
+
+def lpf_standings_dir(season=None):
+    return _LPF_STANDINGS_DIR.format(season=season or CURRENT_SEASON)
+
+def lpf_fixture_file(season=None):
+    return _LPF_FIXTURE_FILE.format(season=season or CURRENT_SEASON)
+
+def lpf_outputs_dir(season=None):
+    return _LPF_OUTPUTS_DIR.format(season=season or CURRENT_SEASON)
+
+def lpf_team_plots_dir(slug, season=None):
+    """Gráficos del análisis de temporada de un equipo de LPF (mismo criterio
+    que rival_plots_dir, pero bajo el árbol propio de LPF):
+    outputs/liga_profesional/{season}/equipos/{slug}/graficos/"""
+    return os.path.join(lpf_outputs_dir(season), "equipos", slug, "graficos")
+
 def season_plots_dir(season=None):
     return _SEASON_PLOTS_DIR.format(season=season or CURRENT_SEASON)
 
@@ -273,29 +468,6 @@ def match_outputs_dir(match_key, season=None):
     # Si no se pasa season, se deriva del prefijo del match_key (YYYY-...)
     s = season or season_from_match_key(match_key)
     return _MATCH_OUTPUTS_DIR.format(season=s, match_key=match_key)
-
-def match_video_dir(match_key, season=None):
-    """Carpeta del video del partido (Fase B: pipeline de visión por computadora).
-    Convención: data/temporadas/{season}/partidos/{match_key}/video/"""
-    s = season or season_from_match_key(match_key)
-    return os.path.join(season_data_dir(s), match_key, "video")
-
-def match_tracking_dir(match_key, season=None):
-    """Datos derivados del video (posiciones, eventos SPADL) — Fase B/C.
-    Convención: data/temporadas/{season}/partidos/{match_key}/tracking/"""
-    s = season or season_from_match_key(match_key)
-    return os.path.join(season_data_dir(s), match_key, "tracking")
-
-def find_match_video(match_key, season=None):
-    """Devuelve la ruta del primer video encontrado en la carpeta video/ del
-    partido, o None si no hay. Acepta cualquier extensión de VIDEO_EXTENSIONS."""
-    vdir = match_video_dir(match_key, season)
-    if not os.path.isdir(vdir):
-        return None
-    for f in sorted(os.listdir(vdir)):
-        if f.lower().endswith(VIDEO_EXTENSIONS):
-            return os.path.join(vdir, f)
-    return None
 
 def pre_outputs_dir(rival, season=None):
     return _PRE_OUTPUTS_DIR.format(season=season or CURRENT_SEASON, rival=rival)
@@ -326,6 +498,17 @@ def group_round_dir(round_num, season=None):
     """Carpeta de una fecha puntual: .../global_grupo_a/liga/fechas/fecha_NN/"""
     return os.path.join(group_league_dir(season), "fechas", f"fecha_{int(round_num):02d}")
 
+def scouting_dir(season=None):
+    """Salidas del recomendador de jugadores (k-NN) y de la auditoría del
+    plantel: outputs/temporadas/{season}/scouting/"""
+    s = season or CURRENT_SEASON
+    return os.path.join(OUTPUTS_DIR, "temporadas", str(s), "scouting")
+
+def group_projection_dir(season=None):
+    """Gráficos de la proyección Monte Carlo de la tabla (Fase 1, Zona A):
+    .../global_grupo_a/liga/proyeccion/"""
+    return os.path.join(group_league_dir(season), "proyeccion")
+
 # Grupo A 2026 = Chaco For Ever + los 18 rivales de la temporada.
 def group_a_teams(season="2026"):
     """Dict {slug: {'id':..., 'name':...}} de los 19 equipos del Grupo A.
@@ -333,6 +516,10 @@ def group_a_teams(season="2026"):
     teams = {"chaco_for_ever": {"id": CHACO_TEAM_ID, "name": "Chaco For Ever"}}
     teams.update(RIVALS_2026 if str(season) == "2026" else {})
     return teams
+
+def group_b_teams(season="2026"):
+    """Dict {slug: {'id':..., 'name':...}} de los 18 equipos de la Zona B."""
+    return dict(RIVALS_ZONA_B_2026 if str(season) == "2026" else {})
 
 def rival_slug_from_match_key(match_key):
     """'2025-02-15_vs_defensores_unidos_a'  →  'defensores_unidos'"""

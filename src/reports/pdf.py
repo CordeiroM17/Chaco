@@ -88,7 +88,7 @@ def _goals(data, chaco_home):
 def gather_context(match_key, season=None):
     """Reúne todo lo necesario para el PDF desde los CSV + gráficos del partido."""
     from src.analysis.post_match import (
-        load_match_data, xg_analysis, player_performance_table)
+        load_match_data, xg_analysis, player_performance_table, match_expected_points)
     from src.analysis.season import (
         get_opponent, get_match_date, is_home_match)
 
@@ -117,6 +117,7 @@ def gather_context(match_key, season=None):
     xg = xg_analysis(match_key, data, season) or {}
     if chaco_g is None:
         chaco_g, rival_g = xg.get("chaco_goals"), xg.get("rival_goals")
+    xpoints = match_expected_points(match_key, data, season)
 
     perf = player_performance_table(match_key, data, season)
     figura = None
@@ -138,6 +139,7 @@ def gather_context(match_key, season=None):
         "chaco_goals": chaco_g,
         "rival_goals": rival_g,
         "xg": xg,
+        "xpoints": xpoints,
         "stats": _match_stats(data, chaco_home),
         "goals": _goals(data, chaco_home),
         "figura": figura,
@@ -168,7 +170,11 @@ def auto_reading(ctx):
     marcador = f"{cg}-{rg}" if cg is not None else ""
     frases.append(f"Chaco {res} {marcador} como {ctx['condicion'].lower()} ante {ctx['rival']}.")
 
-    if xg.get("chaco_xg") is not None:
+    xpts = ctx.get("xpoints")
+    if xpts:
+        frases.append(f"{xg['chaco_xg']:.2f} xG a favor, {xg['rival_xg']:.2f} en contra "
+                      f"→ mereció {xpts['xpoints']:.1f} pts, sacó {xpts['real_points']}.")
+    elif xg.get("chaco_xg") is not None:
         frases.append(f"En xG fue {xg['chaco_xg']:.2f} a favor y {xg['rival_xg']:.2f} en contra: "
                       + ("dominó las situaciones claras." if xg["chaco_xg"] > xg["rival_xg"] + 0.3
                          else "el rival generó tanto o más peligro." if xg["rival_xg"] > xg["chaco_xg"] + 0.3
@@ -471,11 +477,11 @@ def _page_portada(fig, ctx, page, total):
 
 
 def _page_relato(fig, ctx, page, total):
-    _header(fig, "Relato del Partido", "momentum · xG por tramos · timeline")
+    _header(fig, "Relato del Partido", "momentum · xG acumulado · timeline")
     _place_image(fig, _g(ctx, "momentum.png"), (0.06, 0.66, 0.88, 0.24))
     _caption(fig, (0.06, 0.66, 0.88, 0.24), "Dominio territorial minuto a minuto")
-    _place_image(fig, _g(ctx, "xg_tramos.png"), (0.06, 0.37, 0.88, 0.24))
-    _caption(fig, (0.06, 0.37, 0.88, 0.24), "Peligro real (xG) por tramos de 15'")
+    _place_image(fig, _g(ctx, "xg_acumulado.png"), (0.06, 0.37, 0.88, 0.24))
+    _caption(fig, (0.06, 0.37, 0.88, 0.24), "Carrera de xG: peligro real acumulado minuto a minuto")
     _place_image(fig, _g(ctx, "timeline.png"), (0.06, 0.08, 0.88, 0.24))
     _caption(fig, (0.06, 0.08, 0.88, 0.24), "Goles, cambios y tarjetas en el tiempo")
     _footer(fig, page, total)
